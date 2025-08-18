@@ -3,9 +3,7 @@
 import { type LucideIcon } from "lucide-react"
 import Link from "next/link"
 
-import {
-  Collapsible,
-} from "@/components/ui/collapsible"
+import { Collapsible } from "@/components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarMenu,
@@ -30,7 +28,7 @@ export function NavMain({
   return (
     <SidebarGroup>
       <SidebarMenu>
-        {items.map((item) => (
+        {items.map(item => (
           <Collapsible
             key={item.title}
             asChild

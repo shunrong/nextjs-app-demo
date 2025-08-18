@@ -1,23 +1,19 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
+  LayoutDashboard,
+  GraduationCap,
+  Users,
+  UserRound,
+  Receipt,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
 } from "lucide-react"
 
+import { NavLogo } from "@/components/nav-logo"
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -29,8 +25,8 @@ import {
 // This is sample data.
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "舒慧",
+    email: "shuhui@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
@@ -44,42 +40,47 @@ const data = {
     {
       title: "首页",
       url: "/dashboard",
-      icon: SquareTerminal,
-      isActive: true,
+      icon: LayoutDashboard,
     },
     {
       title: "课程",
       url: "/courses",
-      icon: Bot,
+      icon: GraduationCap,
     },
     {
       title: "订单",
       url: "/orders",
-      icon: BookOpen,
-  
+      icon: Receipt,
     },
     {
       title: "学员",
       url: "/students",
-      icon: Settings2,
+      icon: Users,
     },
     {
       title: "教师",
       url: "/teachers",
-      icon: Settings2,
+      icon: UserRound,
     },
   ],
-
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
+
+  // 根据当前路径设置活动状态
+  const navItems = data.navMain.map(item => ({
+    ...item,
+    isActive: pathname === item.url || pathname.startsWith(item.url + "/"),
+  }))
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher />
+        <NavLogo />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
