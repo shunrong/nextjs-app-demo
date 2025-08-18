@@ -1,0 +1,9 @@
+# Vercel ignore file
+# Include prisma directory for database schema
+!prisma/
+!prisma/schema.prisma
+
+# Ignore development files
+.env.local
+.env.example
+README.md

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 // 受保护的 API：获取用户信息
-export async function GET(_: NextRequest) {
+export async function GET() {
   // 由于通过了 middleware 认证，可以安全地处理请求
 
   // const authToken = request.cookies.get('auth-token')?.value
