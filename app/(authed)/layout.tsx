@@ -2,6 +2,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function AuthedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,9 @@ export default function AuthedLayout({ children }: { children: React.ReactNode }
             <SidebarTrigger />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <DynamicBreadcrumb />
+          </div>
+          <div className="ml-auto px-3">
+            <ThemeToggle />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>

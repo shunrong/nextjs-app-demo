@@ -2,14 +2,7 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import {
-  LayoutDashboard,
-  GraduationCap,
-  Users,
-  UserRound,
-  Receipt,
-  GalleryVerticalEnd,
-} from "lucide-react"
+import { LayoutDashboard, GraduationCap, Users, UserRound, Receipt } from "lucide-react"
 
 import { NavLogo } from "@/components/nav-logo"
 import { NavMain } from "@/components/nav-main"
@@ -29,13 +22,6 @@ const data = {
     email: "shuhui@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-  ],
   navMain: [
     {
       title: "首页",
@@ -43,22 +29,22 @@ const data = {
       icon: LayoutDashboard,
     },
     {
-      title: "课程",
+      title: "课程信息",
       url: "/courses",
       icon: GraduationCap,
     },
     {
-      title: "订单",
+      title: "订单管理",
       url: "/orders",
       icon: Receipt,
     },
     {
-      title: "学员",
+      title: "学员档案",
       url: "/students",
       icon: Users,
     },
     {
-      title: "教师",
+      title: "教师档案",
       url: "/teachers",
       icon: UserRound,
     },

@@ -169,8 +169,8 @@ export default function CoursesPage() {
                 </div>
 
                 {/* 底部信息 */}
-                <div className="px-4 bg-white">
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
+                <div className="p-4 bg-card">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                     <span className="flex items-center gap-1">
                       {c.level === "beginner" && "初级"}
                       {c.level === "intermediate" && "中级"}
@@ -180,10 +180,10 @@ export default function CoursesPage() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <span className="text-red-500 text-lg font-bold">
+                      <span className="text-destructive text-lg font-bold">
                         {formatCurrency(c.price)}
                       </span>
-                      <span className="text-gray-400 text-sm line-through">
+                      <span className="text-muted-foreground text-sm line-through">
                         {formatCurrency(Math.floor(c.price * 1.5))}
                       </span>
                     </div>

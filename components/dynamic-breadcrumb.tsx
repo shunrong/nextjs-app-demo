@@ -14,10 +14,10 @@ import {
 // 路由配置映射
 const routeConfig: Record<string, { name: string; href?: string }> = {
   "/dashboard": { name: "首页", href: "/dashboard" },
-  "/courses": { name: "课程管理", href: "/courses" },
-  "/students": { name: "学员管理", href: "/students" },
-  "/teachers": { name: "教师管理", href: "/teachers" },
+  "/courses": { name: "课程信息", href: "/courses" },
   "/orders": { name: "订单管理", href: "/orders" },
+  "/students": { name: "学员档案", href: "/students" },
+  "/teachers": { name: "教师档案", href: "/teachers" },
   // 支持详情页面
   "/courses/[id]": { name: "课程详情" },
   "/students/[id]": { name: "学员详情" },

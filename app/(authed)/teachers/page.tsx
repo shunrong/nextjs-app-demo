@@ -151,8 +151,8 @@ export default function TeachersPage() {
                 </div>
 
                 {/* 底部信息 */}
-                <div className="px-4 bg-white">
-                  <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
+                <div className="p-4 bg-card">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                     <span className="flex items-center gap-1">
                       <BookOpen className="size-4" />
                       {t.courses} 门课程
@@ -163,7 +163,7 @@ export default function TeachersPage() {
                     </span>
                   </div>
 
-                  <div className="pb-4 text-xs text-gray-500">
+                  <div className="text-xs text-muted-foreground">
                     加入时间：{formatDate(t.joinedAt)}
                   </div>
                 </div>
