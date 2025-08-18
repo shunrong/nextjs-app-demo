@@ -15,47 +15,40 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "舒慧",
-    email: "shuhui@example.com",
-    avatar: "/avatars/shadcn.jpg",
+// 导航菜单数据
+const navMain = [
+  {
+    title: "首页",
+    url: "/dashboard",
+    icon: LayoutDashboard,
   },
-  navMain: [
-    {
-      title: "首页",
-      url: "/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "课程信息",
-      url: "/courses",
-      icon: GraduationCap,
-    },
-    {
-      title: "订单管理",
-      url: "/orders",
-      icon: Receipt,
-    },
-    {
-      title: "学员档案",
-      url: "/students",
-      icon: Users,
-    },
-    {
-      title: "教师档案",
-      url: "/teachers",
-      icon: UserRound,
-    },
-  ],
-}
+  {
+    title: "课程信息",
+    url: "/courses",
+    icon: GraduationCap,
+  },
+  {
+    title: "订单管理",
+    url: "/orders",
+    icon: Receipt,
+  },
+  {
+    title: "学员档案",
+    url: "/students",
+    icon: Users,
+  },
+  {
+    title: "教师档案",
+    url: "/teachers",
+    icon: UserRound,
+  },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
 
   // 根据当前路径设置活动状态
-  const navItems = data.navMain.map(item => ({
+  const navItems = navMain.map(item => ({
     ...item,
     isActive: pathname === item.url || pathname.startsWith(item.url + "/"),
   }))
@@ -69,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

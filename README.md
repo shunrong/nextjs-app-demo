@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 环境变量配置
 
-## Getting Started
-
-First, run the development server:
+请在项目根目录创建 `.env.local` 文件，添加以下环境变量：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 数据库连接（Vercel Postgres）
+DATABASE_URL="your_vercel_postgres_connection_string"
+
+# NextAuth 配置
+NEXTAUTH_SECRET="your_nextauth_secret_key_generate_a_random_string"
+NEXTAUTH_URL="http://localhost:3000"
+
+# 生产环境（部署到 Vercel 时自动设置）
+# NEXTAUTH_URL="https://your-domain.vercel.app"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 如何获取 DATABASE_URL
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. 在 Vercel 控制台创建 Postgres 存储
+2. 复制连接字符串到 `DATABASE_URL`
+3. 确保连接字符串格式类似：
+   ```
+   postgresql://username:password@host:port/database?sslmode=require
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 如何生成 NEXTAUTH_SECRET
 
-## Learn More
+运行以下命令生成随机密钥：
+```bash
+openssl rand -base64 32
+```
 
-To learn more about Next.js, take a look at the following resources:
+或者使用在线工具生成32位随机字符串。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 测试账号
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+数据库种子脚本已创建以下测试账号：
+- **管理员**: `admin@example.com` / `admin123`
+- **教师**: `zhang@teacher.com` / `teacher123`
+- **学生**: `zhang.san@student.com` / `student123`
