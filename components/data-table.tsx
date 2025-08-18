@@ -24,12 +24,14 @@ export type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   pageSize?: number
+  showPagination?: boolean
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   pageSize = 10,
+  showPagination = false,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -92,42 +94,44 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          共 {data.length} 条 · 第 {table.getState().pagination.pageIndex + 1}/
-          {table.getPageCount()} 页
+      {showPagination && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            共 {data.length} 条 · 第 {table.getState().pagination.pageIndex + 1}/
+            {table.getPageCount()} 页
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              首页
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              上一页
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              下一页
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              末页
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
-            首页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            上一页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            下一页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-          >
-            末页
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

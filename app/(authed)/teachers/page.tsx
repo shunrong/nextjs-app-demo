@@ -1,12 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/data-table"
-import { generateMockTeachers } from "@/lib/mock-data"
+import { useApi } from "@/hooks/use-api"
 import { LayoutGrid, Table as TableIcon, UserCheck, Star, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -20,31 +20,55 @@ function formatDate(input: string) {
   }).format(new Date(input))
 }
 
+interface Teacher {
+  id: string
+  name: string
+  email: string
+  title: string
+  skills: string[]
+  courses: number
+  rating: number
+  status: "ACTIVE" | "SUSPENDED"
+  joinedAt: string
+  banner?: string | null
+}
+
 export default function TeachersPage() {
   const [query, setQuery] = useState("")
   const [pageIndex, setPageIndex] = useState(1)
-  const [tab, setTab] = useState("card")
+  const [tab, setTab] = useState("table")
 
-  const all = useMemo(() => generateMockTeachers(13), [])
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return all
-    return all.filter(
-      t =>
-        t.name.toLowerCase().includes(q) ||
-        t.email.toLowerCase().includes(q) ||
-        t.skills.join(" ").toLowerCase().includes(q)
-    )
-  }, [query, all])
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(pageIndex, totalPages)
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const {
+    data: teachers,
+    loading,
+    error,
+    total,
+    totalPages,
+  } = useApi<Teacher>("/api/teachers", {
+    page: pageIndex,
+    limit: PAGE_SIZE,
+    search: query,
+  })
 
   function goToPage(next: number) {
     const n = Math.max(1, Math.min(next, totalPages))
     setPageIndex(n)
+  }
+
+  if (loading && teachers.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">加载中...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-destructive">加载失败: {error}</div>
+      </div>
+    )
   }
 
   return (
@@ -74,7 +98,7 @@ export default function TeachersPage() {
       {tab === "table" ? (
         <DataTable
           pageSize={PAGE_SIZE}
-          data={pageItems}
+          data={teachers}
           columns={[
             {
               header: "姓名",
@@ -86,11 +110,20 @@ export default function TeachersPage() {
             {
               header: "技能",
               accessorKey: "skills",
-              cell: ({ getValue }) =>
-                Array.isArray(getValue()) ? (getValue() as string[]).join("、") : "",
+              cell: ({ getValue }) => {
+                const skills = getValue() as string[]
+                return skills.length > 0 ? skills.join("、") : "-"
+              },
             },
             { header: "课程数", accessorKey: "courses" },
-            { header: "评分", accessorKey: "rating" },
+            {
+              header: "评分",
+              accessorKey: "rating",
+              cell: ({ getValue }) => {
+                const rating = Number(getValue())
+                return rating > 0 ? rating.toFixed(1) : "-"
+              },
+            },
             {
               header: "加入时间",
               accessorKey: "joinedAt",
@@ -99,13 +132,13 @@ export default function TeachersPage() {
             {
               header: "状态",
               accessorKey: "status",
-              cell: ({ getValue }) => (String(getValue()) === "active" ? "在职" : "停用"),
+              cell: ({ getValue }) => (String(getValue()) === "ACTIVE" ? "在职" : "停用"),
             },
           ]}
         />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pageItems.map(t => {
+          {teachers.map(t => {
             // 根据职称选择渐变色
             const gradients = {
               讲师: "from-cyan-400 to-cyan-600",
@@ -127,10 +160,10 @@ export default function TeachersPage() {
                     <Badge
                       variant="sale"
                       className={`text-white text-xs px-2 py-1 rounded-sm ${
-                        t.status === "active" ? "bg-green-500" : "bg-gray-500"
+                        t.status === "ACTIVE" ? "bg-green-500" : "bg-gray-500"
                       }`}
                     >
-                      {t.status === "active" ? "在职" : "停用"}
+                      {t.status === "ACTIVE" ? "在职" : "停用"}
                     </Badge>
                   </div>
 
@@ -145,7 +178,7 @@ export default function TeachersPage() {
                   <div className="mt-8">
                     <h3 className="text-xl font-bold mb-2">{t.name}</h3>
                     <p className="text-white/90 text-sm">
-                      {t.title} · {t.skills.slice(0, 2).join("、")}
+                      {t.title} · {t.skills.slice(0, 2).join("、") || "暂无技能标签"}
                     </p>
                   </div>
                 </div>
@@ -159,7 +192,7 @@ export default function TeachersPage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <Star className="size-4 fill-current text-yellow-400" />
-                      {t.rating}
+                      {t.rating > 0 ? t.rating.toFixed(1) : "暂无评分"}
                     </span>
                   </div>
 
@@ -170,9 +203,9 @@ export default function TeachersPage() {
               </Card>
             )
           })}
-          {pageItems.length === 0 && (
+          {teachers.length === 0 && !loading && (
             <div className="col-span-full py-10 text-center text-muted-foreground">
-              没有匹配的教师
+              {query ? "没有匹配的教师" : "暂无教师数据"}
             </div>
           )}
         </div>
@@ -180,30 +213,34 @@ export default function TeachersPage() {
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          共 {filtered.length} 条 · 第 {currentPage}/{totalPages} 页
+          共 {total} 条 · 第 {pageIndex}/{totalPages} 页
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => goToPage(1)} disabled={currentPage === 1}>
+          <Button
+            variant="secondary"
+            onClick={() => goToPage(1)}
+            disabled={pageIndex === 1 || loading}
+          >
             首页
           </Button>
           <Button
             variant="secondary"
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
+            onClick={() => goToPage(pageIndex - 1)}
+            disabled={pageIndex === 1 || loading}
           >
             上一页
           </Button>
           <Button
             variant="secondary"
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            onClick={() => goToPage(pageIndex + 1)}
+            disabled={pageIndex === totalPages || loading}
           >
             下一页
           </Button>
           <Button
             variant="secondary"
             onClick={() => goToPage(totalPages)}
-            disabled={currentPage === totalPages}
+            disabled={pageIndex === totalPages || loading}
           >
             末页
           </Button>

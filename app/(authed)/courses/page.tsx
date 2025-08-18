@@ -1,12 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/data-table"
-import { generateMockCourses } from "@/lib/mock-data"
+import { useApi } from "@/hooks/use-api"
 import { LayoutGrid, Table as TableIcon, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -16,8 +16,8 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
     currency: "CNY",
-    maximumFractionDigits: 0,
-  }).format(amount)
+    maximumFractionDigits: 2,
+  }).format(amount / 100) // 从分转换为元
 }
 
 function formatDate(input: string) {
@@ -28,31 +28,58 @@ function formatDate(input: string) {
   }).format(new Date(input))
 }
 
+interface Course {
+  id: string
+  title: string
+  description: string
+  category: string
+  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  price: number
+  lessons: number
+  banner: string | null
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  teacher: string
+  students: number
+  createdAt: string
+  updatedAt: string
+}
+
 export default function CoursesPage() {
   const [query, setQuery] = useState("")
   const [pageIndex, setPageIndex] = useState(1)
   const [tab, setTab] = useState("card")
 
-  const allCourses = useMemo(() => generateMockCourses(58), [])
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return allCourses
-    return allCourses.filter(
-      c =>
-        c.title.toLowerCase().includes(q) ||
-        c.category.toLowerCase().includes(q) ||
-        c.teacher.toLowerCase().includes(q)
-    )
-  }, [query, allCourses])
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(pageIndex, totalPages)
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const {
+    data: courses,
+    loading,
+    error,
+    total,
+    totalPages,
+  } = useApi<Course>("/api/courses", {
+    page: pageIndex,
+    limit: PAGE_SIZE,
+    search: query,
+  })
 
   function goToPage(next: number) {
     const n = Math.max(1, Math.min(next, totalPages))
     setPageIndex(n)
+  }
+
+  if (loading && courses.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">加载中...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-destructive">加载失败: {error}</div>
+      </div>
+    )
   }
 
   return (
@@ -83,7 +110,7 @@ export default function CoursesPage() {
       {tab === "table" ? (
         <DataTable
           pageSize={PAGE_SIZE}
-          data={pageItems}
+          data={courses}
           columns={[
             {
               header: "课程",
@@ -96,8 +123,8 @@ export default function CoursesPage() {
               header: "难度",
               accessorKey: "level",
               cell: ({ getValue }) =>
-                ({ beginner: "入门", intermediate: "进阶", advanced: "高级" })[
-                  String(getValue()) as "beginner" | "intermediate" | "advanced"
+                ({ BEGINNER: "入门", INTERMEDIATE: "进阶", ADVANCED: "高级" })[
+                  String(getValue()) as "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
                 ],
             },
             { header: "课时", accessorKey: "lessons" },
@@ -111,8 +138,8 @@ export default function CoursesPage() {
               header: "状态",
               accessorKey: "status",
               cell: ({ getValue }) =>
-                ({ draft: "草稿", published: "已发布", archived: "已归档" })[
-                  String(getValue()) as "draft" | "published" | "archived"
+                ({ DRAFT: "草稿", PUBLISHED: "已发布", ARCHIVED: "已归档" })[
+                  String(getValue()) as "DRAFT" | "PUBLISHED" | "ARCHIVED"
                 ],
             },
             {
@@ -124,7 +151,7 @@ export default function CoursesPage() {
         />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pageItems.map(c => {
+          {courses.map(c => {
             // 根据分类选择渐变色
             const gradients = {
               前端: "from-emerald-400 to-emerald-600",
@@ -142,13 +169,23 @@ export default function CoursesPage() {
                 className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
               >
                 <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
-                  {/* 促销标签 */}
+                  {/* 状态标签 */}
                   <div className="absolute top-4 left-4">
                     <Badge
                       variant="sale"
-                      className="bg-red-500 text-white text-xs px-2 py-1 rounded-sm"
+                      className={`text-white text-xs px-2 py-1 rounded-sm ${
+                        c.status === "PUBLISHED"
+                          ? "bg-green-500"
+                          : c.status === "DRAFT"
+                            ? "bg-yellow-500"
+                            : "bg-gray-500"
+                      }`}
                     >
-                      暑期特惠
+                      {c.status === "PUBLISHED"
+                        ? "已发布"
+                        : c.status === "DRAFT"
+                          ? "草稿"
+                          : "已归档"}
                     </Badge>
                   </div>
 
@@ -163,7 +200,7 @@ export default function CoursesPage() {
                   <div className="mt-8">
                     <h3 className="text-xl font-bold mb-2 line-clamp-2">{c.title}</h3>
                     <p className="text-white/90 text-sm line-clamp-2">
-                      {c.category} 从基础到精通，大型复杂业务架构落地实践
+                      {c.description || `${c.category} 专业课程，由 ${c.teacher} 授课`}
                     </p>
                   </div>
                 </div>
@@ -172,9 +209,9 @@ export default function CoursesPage() {
                 <div className="p-4 bg-card">
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                     <span className="flex items-center gap-1">
-                      {c.level === "beginner" && "初级"}
-                      {c.level === "intermediate" && "中级"}
-                      {c.level === "advanced" && "高级"}· {c.students}人报名
+                      {c.level === "BEGINNER" && "初级"}
+                      {c.level === "INTERMEDIATE" && "中级"}
+                      {c.level === "ADVANCED" && "高级"}· {c.students}人报名
                     </span>
                   </div>
 
@@ -184,7 +221,7 @@ export default function CoursesPage() {
                         {formatCurrency(c.price)}
                       </span>
                       <span className="text-muted-foreground text-sm line-through">
-                        {formatCurrency(Math.floor(c.price * 1.5))}
+                        {formatCurrency(Math.floor(c.price * 1.2))}
                       </span>
                     </div>
                   </div>
@@ -192,9 +229,9 @@ export default function CoursesPage() {
               </Card>
             )
           })}
-          {pageItems.length === 0 && (
+          {courses.length === 0 && !loading && (
             <div className="col-span-full py-10 text-center text-muted-foreground">
-              没有匹配的课程
+              {query ? "没有匹配的课程" : "暂无课程数据"}
             </div>
           )}
         </div>
@@ -202,30 +239,34 @@ export default function CoursesPage() {
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          共 {filtered.length} 条 · 第 {currentPage}/{totalPages} 页
+          共 {total} 条 · 第 {pageIndex}/{totalPages} 页
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => goToPage(1)} disabled={currentPage === 1}>
+          <Button
+            variant="secondary"
+            onClick={() => goToPage(1)}
+            disabled={pageIndex === 1 || loading}
+          >
             首页
           </Button>
           <Button
             variant="secondary"
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
+            onClick={() => goToPage(pageIndex - 1)}
+            disabled={pageIndex === 1 || loading}
           >
             上一页
           </Button>
           <Button
             variant="secondary"
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            onClick={() => goToPage(pageIndex + 1)}
+            disabled={pageIndex === totalPages || loading}
           >
             下一页
           </Button>
           <Button
             variant="secondary"
             onClick={() => goToPage(totalPages)}
-            disabled={currentPage === totalPages}
+            disabled={pageIndex === totalPages || loading}
           >
             末页
           </Button>

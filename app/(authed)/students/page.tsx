@@ -1,12 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/data-table"
-import { generateMockStudents } from "@/lib/mock-data"
+import { useApi } from "@/hooks/use-api"
 import { LayoutGrid, Table as TableIcon, User, GraduationCap, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -20,29 +20,54 @@ function formatDate(input: string) {
   }).format(new Date(input))
 }
 
+interface Student {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  gender: "MALE" | "FEMALE" | null
+  credits: number
+  status: "ACTIVE" | "SUSPENDED" | "GRADUATED"
+  enrolledCourses: number
+  joinedAt: string
+}
+
 export default function StudentsPage() {
   const [query, setQuery] = useState("")
   const [pageIndex, setPageIndex] = useState(1)
-  const [tab, setTab] = useState("card")
+  const [tab, setTab] = useState("table")
 
-  const all = useMemo(() => generateMockStudents(293), [])
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return all
-    return all.filter(
-      s =>
-        s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || s.phone.includes(q)
-    )
-  }, [query, all])
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(pageIndex, totalPages)
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const {
+    data: students,
+    loading,
+    error,
+    total,
+    totalPages,
+  } = useApi<Student>("/api/students", {
+    page: pageIndex,
+    limit: PAGE_SIZE,
+    search: query,
+  })
 
   function goToPage(next: number) {
     const n = Math.max(1, Math.min(next, totalPages))
     setPageIndex(n)
+  }
+
+  if (loading && students.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-muted-foreground">加载中...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-destructive">加载失败: {error}</div>
+      </div>
+    )
   }
 
   return (
@@ -72,7 +97,7 @@ export default function StudentsPage() {
       {tab === "table" ? (
         <DataTable
           pageSize={PAGE_SIZE}
-          data={pageItems}
+          data={students}
           columns={[
             {
               header: "姓名",
@@ -80,11 +105,14 @@ export default function StudentsPage() {
               cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
             },
             { header: "邮箱", accessorKey: "email" },
-            { header: "手机号", accessorKey: "phone" },
+            { header: "手机号", accessorKey: "phone", cell: ({ getValue }) => getValue() || "-" },
             {
               header: "性别",
               accessorKey: "gender",
-              cell: ({ getValue }) => (String(getValue()) === "male" ? "男" : "女"),
+              cell: ({ getValue }) => {
+                const gender = getValue() as "MALE" | "FEMALE" | null
+                return gender === "MALE" ? "男" : gender === "FEMALE" ? "女" : "-"
+              },
             },
             { header: "选课数", accessorKey: "enrolledCourses" },
             { header: "学分", accessorKey: "credits" },
@@ -92,8 +120,8 @@ export default function StudentsPage() {
               header: "状态",
               accessorKey: "status",
               cell: ({ getValue }) =>
-                ({ active: "在读", suspended: "休学", graduated: "毕业" })[
-                  String(getValue()) as "active" | "suspended" | "graduated"
+                ({ ACTIVE: "在读", SUSPENDED: "休学", GRADUATED: "毕业" })[
+                  String(getValue()) as "ACTIVE" | "SUSPENDED" | "GRADUATED"
                 ],
             },
             {
@@ -105,15 +133,14 @@ export default function StudentsPage() {
         />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {pageItems.map(s => {
+          {students.map(s => {
             // 根据状态选择渐变色
             const gradients = {
-              active: "from-green-400 to-green-600",
-              suspended: "from-yellow-400 to-yellow-600",
-              graduated: "from-blue-400 to-blue-600",
+              ACTIVE: "from-green-400 to-green-600",
+              SUSPENDED: "from-yellow-400 to-yellow-600",
+              GRADUATED: "from-blue-400 to-blue-600",
             }
-            const gradient =
-              gradients[s.status as keyof typeof gradients] || "from-gray-400 to-gray-600"
+            const gradient = gradients[s.status] || "from-gray-400 to-gray-600"
 
             return (
               <Card
@@ -126,14 +153,14 @@ export default function StudentsPage() {
                     <Badge
                       variant="sale"
                       className={`text-white text-xs px-2 py-1 rounded-sm ${
-                        s.status === "active"
+                        s.status === "ACTIVE"
                           ? "bg-green-500"
-                          : s.status === "suspended"
+                          : s.status === "SUSPENDED"
                             ? "bg-yellow-500"
                             : "bg-blue-500"
                       }`}
                     >
-                      {s.status === "active" ? "在读" : s.status === "suspended" ? "休学" : "毕业"}
+                      {s.status === "ACTIVE" ? "在读" : s.status === "SUSPENDED" ? "休学" : "毕业"}
                     </Badge>
                   </div>
 
@@ -148,7 +175,7 @@ export default function StudentsPage() {
                   <div className="mt-8">
                     <h3 className="text-xl font-bold mb-2">{s.name}</h3>
                     <p className="text-white/90 text-sm">
-                      {s.gender === "male" ? "男" : "女"} · {s.email}
+                      {s.gender === "MALE" ? "男" : s.gender === "FEMALE" ? "女" : ""} · {s.email}
                     </p>
                   </div>
                 </div>
@@ -173,9 +200,9 @@ export default function StudentsPage() {
               </Card>
             )
           })}
-          {pageItems.length === 0 && (
+          {students.length === 0 && !loading && (
             <div className="col-span-full py-10 text-center text-muted-foreground">
-              没有匹配的学生
+              {query ? "没有匹配的学生" : "暂无学生数据"}
             </div>
           )}
         </div>
@@ -183,30 +210,34 @@ export default function StudentsPage() {
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          共 {filtered.length} 条 · 第 {currentPage}/{totalPages} 页
+          共 {total} 条 · 第 {pageIndex}/{totalPages} 页
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => goToPage(1)} disabled={currentPage === 1}>
+          <Button
+            variant="secondary"
+            onClick={() => goToPage(1)}
+            disabled={pageIndex === 1 || loading}
+          >
             首页
           </Button>
           <Button
             variant="secondary"
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
+            onClick={() => goToPage(pageIndex - 1)}
+            disabled={pageIndex === 1 || loading}
           >
             上一页
           </Button>
           <Button
             variant="secondary"
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            onClick={() => goToPage(pageIndex + 1)}
+            disabled={pageIndex === totalPages || loading}
           >
             下一页
           </Button>
           <Button
             variant="secondary"
             onClick={() => goToPage(totalPages)}
-            disabled={currentPage === totalPages}
+            disabled={pageIndex === totalPages || loading}
           >
             末页
           </Button>
