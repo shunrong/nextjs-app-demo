@@ -7,181 +7,200 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// NextAuth.js 相关表
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+// 用户主表
+model User {
+  id        Int      @id @default(autoincrement())
+  phone     String   @unique // 注册手机号
+  name      String? // 姓名
+  nick      String? // 昵称
+  email     String? // 邮箱（NextAuth需要，可选）
+  password  String // 密码
+  gender    Gender? // 性别
+  avatar    String? // 头像
+  role      Role // 角色：学生，老师，老板
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 角色关联字段（只有对应角色才有值）
+  studentId Int? @unique
+  teacherId Int? @unique
+  bossId    Int? @unique
+
+  // 业务关联
+  socials        Social[]
+  student        Student?
+  teacher        Teacher?
+  boss           Boss?
+  orders         Order[] // 作为学生的订单
+  teachedCourses Course[] // 作为教师的课程
+  leaves         Leave[] // 请假记录
+
+  @@index([role])
+  @@index([phone])
+}
+
+// 社交账号绑定表
+model Social {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  openId   String // 社交平台账号ID
+  platform String // 平台：微信，QQ等
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  @@unique([platform, openId])
+  @@index([userId])
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// 学生信息表
+model Student {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @unique
+  birth        DateTime? // 出生年月
+  photo        String? // 形象照
+  parentPhone1 String? // 监护人电话1
+  parentName1  String? // 监护人姓名1
+  parentRole1  String? // 监护人与本人关系1
+  parentPhone2 String? // 监护人电话2
+  parentName2  String? // 监护人姓名2
+  parentRole2  String? // 监护人与本人关系2
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+// 教师信息表
+model Teacher {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  position  String? // 职位：主课还是助教
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([identifier, token])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// 用户表（扩展 NextAuth 的 User 表）
-model User {
-  id            String     @id @default(cuid())
-  name          String?
-  email         String     @unique
-  emailVerified DateTime?
-  image         String?
-  password      String? // 用于邮箱密码登录
-  role          Role       @default(STUDENT)
-  phone         String?
-  gender        Gender?
-  credits       Int        @default(0)
-  status        UserStatus @default(ACTIVE)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+// 老板信息表
+model Boss {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // NextAuth 关联
-  accounts Account[]
-  sessions Session[]
-
-  // 业务关联
-  enrollments    Enrollment[]
-  orders         Order[]
-  teacherProfile TeacherProfile?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// 教师资料表
-model TeacherProfile {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  title        String // 职称
-  bio          String?  @db.Text
-  skills       String[] // 技能标签
-  rating       Float    @default(0)
-  totalCourses Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courses Course[]
-}
-
-// 课程表
+// 课程表（商品表）
 model Course {
-  id          String       @id @default(cuid())
-  title       String
-  description String?      @db.Text
-  category    String
-  level       CourseLevel  @default(BEGINNER)
+  id          Int          @id @default(autoincrement())
+  title       String // 课程标题
+  subtitle    String? // 课程副标题描述
+  category    String // 课程专业：中国舞，拉丁舞，绘画，书法，口才
+  teacherId   Int // 主课老师ID
+  assistantId Int? // 助教ID（可选）
+  banner      String? // 封面图
+  year        Int // 课程开设年份
+  term        String // 课程学期：春季，暑期，秋季
+  status      CourseStatus @default(DRAFT) // 状态：待上架，开课中，已结课，已归档
   price       Int // 价格（分）
-  lessons     Int          @default(0)
-  banner      String?
-  status      CourseStatus @default(DRAFT)
-  teacherId   String
+  address     String? // 上课地点
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  teacher     TeacherProfile @relation(fields: [teacherId], references: [id])
-  enrollments Enrollment[]
-  orders      Order[]
+  teacher User     @relation(fields: [teacherId], references: [id])
+  lessons Lesson[]
+  orders  Order[]
+
+  @@index([teacherId])
+  @@index([category])
+  @@index([year, term])
+  @@index([status])
 }
 
-// 选课记录
-model Enrollment {
-  id          String           @id @default(cuid())
-  userId      String
-  courseId    String
-  status      EnrollmentStatus @default(ACTIVE)
-  progress    Int              @default(0) // 进度百分比
-  enrolledAt  DateTime         @default(now())
-  completedAt DateTime?
+// 课时表
+model Lesson {
+  id        Int          @id @default(autoincrement())
+  courseId  Int
+  title     String // 课时标题
+  subtitle  String? // 课时副标题描述
+  startTime DateTime // 课时开始时间
+  endTime   DateTime // 课时结束时间
+  status    LessonStatus @default(PENDING) // 状态：未开始，已完成
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id])
-  course Course @relation(fields: [courseId], references: [id])
+  course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  leaves Leave[]
 
-  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([startTime])
+  @@index([status])
 }
 
-// 订单表
+// 订单表（报名记录表）
 model Order {
-  id        String      @id @default(cuid())
-  orderNo   String      @unique
-  userId    String
-  courseId  String
-  amount    Int // 金额（分）
-  payMethod PayMethod?
-  status    OrderStatus @default(PENDING)
+  id        Int         @id @default(autoincrement())
+  orderNo   String      @unique // 订单号：OD20240301001
+  studentId Int // 学生ID
+  courseId  Int // 课程ID
+  status    OrderStatus @default(REGISTERED) // 状态：已登记，已完成
+  payTime   DateTime? // 支付时间（微信转账时间）
+  amount    Int // 付款金额（分）0表示免费
   createdAt DateTime    @default(now())
-  paidAt    DateTime?
+  updatedAt DateTime    @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id])
-  course Course @relation(fields: [courseId], references: [id])
+  student User   @relation(fields: [studentId], references: [id])
+  course  Course @relation(fields: [courseId], references: [id])
+
+  @@index([studentId])
+  @@index([courseId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([orderNo])
+}
+
+// 请假记录表
+model Leave {
+  id        Int      @id @default(autoincrement())
+  studentId Int // 学生ID
+  lessonId  Int // 课时ID
+  reason    String? // 请假原因
+  createdAt DateTime @default(now())
+
+  student User   @relation(fields: [studentId], references: [id])
+  lesson  Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([studentId, lessonId]) // 同一学生同一课时只能请假一次
+  @@index([studentId])
+  @@index([lessonId])
 }
 
 // 枚举类型
 enum Role {
-  STUDENT
-  TEACHER
-  ADMIN
+  STUDENT // 学生
+  TEACHER // 老师
+  BOSS // 老板
 }
 
 enum Gender {
-  MALE
-  FEMALE
-}
-
-enum UserStatus {
-  ACTIVE
-  SUSPENDED
-  GRADUATED
-}
-
-enum CourseLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
+  MALE // 男
+  FEMALE // 女
 }
 
 enum CourseStatus {
-  DRAFT
-  PUBLISHED
-  ARCHIVED
+  DRAFT // 待上架
+  PUBLISHED // 开课中
+  COMPLETED // 已结课
+  ARCHIVED // 已归档
 }
 
-enum EnrollmentStatus {
-  ACTIVE
-  SUSPENDED
-  COMPLETED
+enum LessonStatus {
+  PENDING // 未开始
+  COMPLETED // 已完成
 }
 
 enum OrderStatus {
-  PENDING
-  PAID
-  REFUNDED
-  FAILED
-}
-
-enum PayMethod {
-  ALIPAY
-  WECHAT
-  CARD
+  REGISTERED // 已登记
+  COMPLETED // 已完成
 }

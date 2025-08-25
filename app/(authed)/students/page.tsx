@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/data-table"
 import { useApi } from "@/hooks/use-api"
-import { LayoutGrid, Table as TableIcon, User, GraduationCap, BookOpen } from "lucide-react"
+import { LayoutGrid, Table as TableIcon, User, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 const PAGE_SIZE = 10
@@ -21,13 +21,20 @@ function formatDate(input: string) {
 }
 
 interface Student {
-  id: string
+  id: number
+  displayCode: string
   name: string
-  email: string
-  phone: string | null
+  email: string | null
+  phone: string
   gender: "MALE" | "FEMALE" | null
-  credits: number
-  status: "ACTIVE" | "SUSPENDED" | "GRADUATED"
+  birth?: string | null
+  photo?: string | null
+  parentName1?: string | null
+  parentPhone1?: string | null
+  parentRole1?: string | null
+  parentName2?: string | null
+  parentPhone2?: string | null
+  parentRole2?: string | null
   enrolledCourses: number
   joinedAt: string
 }
@@ -100,12 +107,19 @@ export default function StudentsPage() {
           data={students}
           columns={[
             {
+              header: "编号",
+              accessorKey: "displayCode",
+              cell: ({ getValue }) => (
+                <span className="font-mono text-sm">{String(getValue())}</span>
+              ),
+            },
+            {
               header: "姓名",
               accessorKey: "name",
               cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
             },
-            { header: "邮箱", accessorKey: "email" },
-            { header: "手机号", accessorKey: "phone", cell: ({ getValue }) => getValue() || "-" },
+            { header: "手机号", accessorKey: "phone" },
+            { header: "邮箱", accessorKey: "email", cell: ({ getValue }) => getValue() || "-" },
             {
               header: "性别",
               accessorKey: "gender",
@@ -115,14 +129,14 @@ export default function StudentsPage() {
               },
             },
             { header: "选课数", accessorKey: "enrolledCourses" },
-            { header: "学分", accessorKey: "credits" },
             {
-              header: "状态",
-              accessorKey: "status",
-              cell: ({ getValue }) =>
-                ({ ACTIVE: "在读", SUSPENDED: "休学", GRADUATED: "毕业" })[
-                  String(getValue()) as "ACTIVE" | "SUSPENDED" | "GRADUATED"
-                ],
+              header: "监护人",
+              accessorKey: "parentName1",
+              cell: ({ row }) => {
+                const parent1 = row.original.parentName1
+                const phone1 = row.original.parentPhone1
+                return parent1 ? `${parent1}${phone1 ? ` (${phone1})` : ""}` : "-"
+              },
             },
             {
               header: "入学时间",
@@ -134,13 +148,8 @@ export default function StudentsPage() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {students.map(s => {
-            // 根据状态选择渐变色
-            const gradients = {
-              ACTIVE: "from-green-400 to-green-600",
-              SUSPENDED: "from-yellow-400 to-yellow-600",
-              GRADUATED: "from-blue-400 to-blue-600",
-            }
-            const gradient = gradients[s.status] || "from-gray-400 to-gray-600"
+            // 使用默认渐变色
+            const gradient = "from-blue-400 to-blue-600"
 
             return (
               <Card
@@ -148,19 +157,13 @@ export default function StudentsPage() {
                 className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
               >
                 <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
-                  {/* 状态标签 */}
+                  {/* 学生编号 */}
                   <div className="absolute top-4 left-4">
                     <Badge
                       variant="sale"
-                      className={`text-white text-xs px-2 py-1 rounded-sm ${
-                        s.status === "ACTIVE"
-                          ? "bg-green-500"
-                          : s.status === "SUSPENDED"
-                            ? "bg-yellow-500"
-                            : "bg-blue-500"
-                      }`}
+                      className="text-white text-xs px-2 py-1 rounded-sm bg-white/20"
                     >
-                      {s.status === "ACTIVE" ? "在读" : s.status === "SUSPENDED" ? "休学" : "毕业"}
+                      {s.displayCode}
                     </Badge>
                   </div>
 
@@ -175,8 +178,11 @@ export default function StudentsPage() {
                   <div className="mt-8">
                     <h3 className="text-xl font-bold mb-2">{s.name}</h3>
                     <p className="text-white/90 text-sm">
-                      {s.gender === "MALE" ? "男" : s.gender === "FEMALE" ? "女" : ""} · {s.email}
+                      {s.gender === "MALE" ? "男" : s.gender === "FEMALE" ? "女" : ""} · {s.phone}
                     </p>
+                    {s.parentName1 && (
+                      <p className="text-white/80 text-xs mt-1">监护人：{s.parentName1}</p>
+                    )}
                   </div>
                 </div>
 
@@ -187,10 +193,7 @@ export default function StudentsPage() {
                       <BookOpen className="size-4" />
                       选课 {s.enrolledCourses} 门
                     </span>
-                    <span className="flex items-center gap-1">
-                      <GraduationCap className="size-4" />
-                      学分 {s.credits}
-                    </span>
+                    {s.email && <span className="text-xs">{s.email}</span>}
                   </div>
 
                   <div className="text-xs text-muted-foreground">

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/data-table"
 import { useApi } from "@/hooks/use-api"
-import { LayoutGrid, Table as TableIcon, UserCheck, Star, BookOpen } from "lucide-react"
+import { LayoutGrid, Table as TableIcon, UserCheck, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 const PAGE_SIZE = 12
@@ -21,16 +21,16 @@ function formatDate(input: string) {
 }
 
 interface Teacher {
-  id: string
+  id: number
+  displayCode: string
   name: string
-  email: string
-  title: string
-  skills: string[]
-  courses: number
-  rating: number
-  status: "ACTIVE" | "SUSPENDED"
+  email?: string | null
+  phone: string
+  gender?: "MALE" | "FEMALE" | null
+  avatar?: string | null
+  position: string
+  courseCount: number
   joinedAt: string
-  banner?: string | null
 }
 
 export default function TeachersPage() {
@@ -75,7 +75,7 @@ export default function TeachersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Input
-          placeholder="搜索姓名/邮箱/技能"
+          placeholder="搜索姓名/邮箱/手机号"
           value={query}
           onChange={e => {
             setQuery(e.target.value)
@@ -101,53 +101,46 @@ export default function TeachersPage() {
           data={teachers}
           columns={[
             {
+              header: "编号",
+              accessorKey: "displayCode",
+              cell: ({ getValue }) => (
+                <span className="font-mono text-sm">{String(getValue())}</span>
+              ),
+            },
+            {
               header: "姓名",
               accessorKey: "name",
               cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
             },
-            { header: "邮箱", accessorKey: "email" },
-            { header: "职称", accessorKey: "title" },
+            { header: "手机号", accessorKey: "phone" },
+            { header: "邮箱", accessorKey: "email", cell: ({ getValue }) => getValue() || "-" },
             {
-              header: "技能",
-              accessorKey: "skills",
+              header: "性别",
+              accessorKey: "gender",
               cell: ({ getValue }) => {
-                const skills = getValue() as string[]
-                return skills.length > 0 ? skills.join("、") : "-"
+                const gender = getValue() as "MALE" | "FEMALE" | null
+                return gender === "MALE" ? "男" : gender === "FEMALE" ? "女" : "-"
               },
             },
-            { header: "课程数", accessorKey: "courses" },
-            {
-              header: "评分",
-              accessorKey: "rating",
-              cell: ({ getValue }) => {
-                const rating = Number(getValue())
-                return rating > 0 ? rating.toFixed(1) : "-"
-              },
-            },
+            { header: "职位", accessorKey: "position" },
+            { header: "课程数", accessorKey: "courseCount" },
             {
               header: "加入时间",
               accessorKey: "joinedAt",
               cell: ({ getValue }) => formatDate(String(getValue())),
-            },
-            {
-              header: "状态",
-              accessorKey: "status",
-              cell: ({ getValue }) => (String(getValue()) === "ACTIVE" ? "在职" : "停用"),
             },
           ]}
         />
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {teachers.map(t => {
-            // 根据职称选择渐变色
+            // 根据职位选择渐变色
             const gradients = {
-              讲师: "from-cyan-400 to-cyan-600",
-              高级讲师: "from-purple-400 to-purple-600",
-              副教授: "from-indigo-400 to-indigo-600",
-              教授: "from-pink-400 to-pink-600",
+              主课: "from-cyan-400 to-cyan-600",
+              助教: "from-purple-400 to-purple-600",
             }
             const gradient =
-              gradients[t.title as keyof typeof gradients] || "from-gray-400 to-gray-600"
+              gradients[t.position as keyof typeof gradients] || "from-gray-400 to-gray-600"
 
             return (
               <Card
@@ -155,15 +148,13 @@ export default function TeachersPage() {
                 className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
               >
                 <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
-                  {/* 状态标签 */}
+                  {/* 教师编号 */}
                   <div className="absolute top-4 left-4">
                     <Badge
                       variant="sale"
-                      className={`text-white text-xs px-2 py-1 rounded-sm ${
-                        t.status === "ACTIVE" ? "bg-green-500" : "bg-gray-500"
-                      }`}
+                      className="text-white text-xs px-2 py-1 rounded-sm bg-white/20"
                     >
-                      {t.status === "ACTIVE" ? "在职" : "停用"}
+                      {t.displayCode}
                     </Badge>
                   </div>
 
@@ -178,8 +169,10 @@ export default function TeachersPage() {
                   <div className="mt-8">
                     <h3 className="text-xl font-bold mb-2">{t.name}</h3>
                     <p className="text-white/90 text-sm">
-                      {t.title} · {t.skills.slice(0, 2).join("、") || "暂无技能标签"}
+                      {t.position} ·{" "}
+                      {t.gender === "MALE" ? "男" : t.gender === "FEMALE" ? "女" : ""} · {t.phone}
                     </p>
+                    {t.email && <p className="text-white/80 text-xs mt-1">{t.email}</p>}
                   </div>
                 </div>
 
@@ -188,11 +181,7 @@ export default function TeachersPage() {
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                     <span className="flex items-center gap-1">
                       <BookOpen className="size-4" />
-                      {t.courses} 门课程
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Star className="size-4 fill-current text-yellow-400" />
-                      {t.rating > 0 ? t.rating.toFixed(1) : "暂无评分"}
+                      {t.courseCount} 门课程
                     </span>
                   </div>
 

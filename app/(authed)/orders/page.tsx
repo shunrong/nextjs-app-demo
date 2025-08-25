@@ -34,15 +34,19 @@ function formatDateTime(input: string) {
 }
 
 interface Order {
-  id: string
+  id: number
   orderNo: string
   studentName: string
+  studentPhone: string
+  parentName?: string | null
+  parentPhone?: string | null
   courseTitle: string
+  courseCategory: string
+  courseTerm: string
   amount: number
-  payMethod: "ALIPAY" | "WECHAT" | "CARD" | null
-  status: "PENDING" | "PAID" | "REFUNDED" | "FAILED"
+  status: "REGISTERED" | "REFUNDED"
+  payTime?: string | null
   createdAt: string
-  paidAt: string | null
 }
 
 export default function OrdersPage() {
@@ -102,40 +106,52 @@ export default function OrdersPage() {
             <TableRow>
               <TableHead>订单号</TableHead>
               <TableHead>学员</TableHead>
+              <TableHead>监护人</TableHead>
               <TableHead>课程</TableHead>
+              <TableHead>学期</TableHead>
               <TableHead>金额</TableHead>
-              <TableHead>支付方式</TableHead>
               <TableHead>状态</TableHead>
-              <TableHead>创建时间</TableHead>
-              <TableHead>支付时间</TableHead>
+              <TableHead>登记时间</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orders.map(o => (
               <TableRow key={o.id}>
                 <TableCell className="font-mono text-xs">{o.orderNo}</TableCell>
-                <TableCell>{o.studentName}</TableCell>
-                <TableCell>{o.courseTitle}</TableCell>
-                <TableCell>{formatCurrency(o.amount)}</TableCell>
                 <TableCell>
-                  {o.payMethod === "ALIPAY" && "支付宝"}
-                  {o.payMethod === "WECHAT" && "微信"}
-                  {o.payMethod === "CARD" && "银行卡"}
-                  {!o.payMethod && "-"}
+                  <div>
+                    <div className="font-medium">{o.studentName}</div>
+                    <div className="text-xs text-muted-foreground">{o.studentPhone}</div>
+                  </div>
                 </TableCell>
                 <TableCell>
-                  {o.status === "PAID" && <span className="text-green-600">已支付</span>}
-                  {o.status === "PENDING" && <span className="text-amber-600">待支付</span>}
-                  {o.status === "REFUNDED" && <span className="text-blue-600">已退款</span>}
-                  {o.status === "FAILED" && <span className="text-red-600">失败</span>}
-                </TableCell>
-                <TableCell>{formatDateTime(o.createdAt)}</TableCell>
-                <TableCell>
-                  {o.paidAt ? (
-                    formatDateTime(o.paidAt)
+                  {o.parentName ? (
+                    <div>
+                      <div className="text-sm">{o.parentName}</div>
+                      {o.parentPhone && (
+                        <div className="text-xs text-muted-foreground">{o.parentPhone}</div>
+                      )}
+                    </div>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{o.courseTitle}</div>
+                    <div className="text-xs text-muted-foreground">{o.courseCategory}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm">{o.courseTerm}</span>
+                </TableCell>
+                <TableCell>{formatCurrency(o.amount)}</TableCell>
+                <TableCell>
+                  {o.status === "REGISTERED" && <span className="text-green-600">已登记</span>}
+                  {o.status === "REFUNDED" && <span className="text-blue-600">已退款</span>}
+                </TableCell>
+                <TableCell>
+                  {o.payTime ? formatDateTime(o.payTime) : formatDateTime(o.createdAt)}
                 </TableCell>
               </TableRow>
             ))}

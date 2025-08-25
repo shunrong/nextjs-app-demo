@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
-  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -25,10 +24,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
     setError("")
 
     try {
-      console.log("尝试登录:", { email, callbackUrl })
+      console.log("尝试登录:", { phone, callbackUrl })
 
       const result = await signIn("credentials", {
-        email,
+        phone, // 改用手机号字段
         password,
         redirect: false,
       })
@@ -44,7 +43,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           window.location.href = callbackUrl
         }, 100)
       } else {
-        setError("登录失败，请检查邮箱和密码")
+        setError("登录失败，请检查手机号和密码")
       }
     } catch (err) {
       console.error("登录异常:", err)
@@ -59,6 +58,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       <Card className="py-8">
         <CardHeader>
           <CardTitle>教育管理系统</CardTitle>
+          <p className="text-sm text-muted-foreground">培训机构内部管理平台</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
@@ -68,13 +68,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                   {error}
                 </div>
               )}
+
               <div className="grid gap-3">
-                <Label htmlFor="email">邮箱</Label>
+                <Label htmlFor="phone">手机号</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  id="phone"
+                  type="tel"
+                  placeholder="请输入手机号"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
                   required
                   disabled={isLoading}
                 />
@@ -85,6 +87,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 <Input
                   id="password"
                   type="password"
+                  placeholder="请输入密码"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
@@ -97,11 +100,15 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               </Button>
             </div>
 
-            <div className="mt-4 text-center text-sm">
-              没有账号？
-              <Link href="/register" className="text-primary hover:underline ml-1">
-                立即注册
-              </Link>
+            {/* 测试账号提示 */}
+            <div className="mt-6 p-4 bg-muted rounded-md">
+              <p className="text-sm font-medium mb-2">测试账号：</p>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>老板：13800000001 / 123456</p>
+                <p>李老师：13800000002 / 123456</p>
+                <p>王老师：13800000003 / 123456</p>
+                <p>小明：13800000004 / 123456</p>
+              </div>
             </div>
           </form>
         </CardContent>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { generateOrderNo } from "@/lib/display-codes"
 
 // 获取订单列表
 export async function GET(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
       ? {
           OR: [
             { orderNo: { contains: search, mode: "insensitive" as const } },
-            { user: { name: { contains: search, mode: "insensitive" as const } } },
+            { student: { name: { contains: search, mode: "insensitive" as const } } },
             { course: { title: { contains: search, mode: "insensitive" as const } } },
           ],
         }
@@ -30,8 +31,26 @@ export async function GET(request: NextRequest) {
       prisma.order.findMany({
         where,
         include: {
-          user: { select: { name: true } },
-          course: { select: { title: true } },
+          student: {
+            select: {
+              name: true,
+              phone: true,
+              student: {
+                select: {
+                  parentName1: true,
+                  parentPhone1: true,
+                },
+              },
+            },
+          },
+          course: {
+            select: {
+              title: true,
+              category: true,
+              year: true,
+              term: true,
+            },
+          },
         },
         skip: (page - 1) * limit,
         take: limit,
@@ -40,16 +59,21 @@ export async function GET(request: NextRequest) {
       prisma.order.count({ where }),
     ])
 
+    // 格式化订单数据
     const formattedOrders = orders.map(order => ({
       id: order.id,
       orderNo: order.orderNo,
-      studentName: order.user.name,
+      studentName: order.student.name,
+      studentPhone: order.student.phone,
+      parentName: order.student.student?.parentName1,
+      parentPhone: order.student.student?.parentPhone1,
       courseTitle: order.course.title,
+      courseCategory: order.course.category,
+      courseTerm: `${order.course.year}年${order.course.term}`,
       amount: order.amount,
-      payMethod: order.payMethod,
       status: order.status,
+      payTime: order.payTime,
       createdAt: order.createdAt,
-      paidAt: order.paidAt,
     }))
 
     return NextResponse.json({
@@ -65,7 +89,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 创建订单
+// 创建订单（报名记录）
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -73,13 +97,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未登录" }, { status: 401 })
     }
 
-    const { courseId, payMethod } = await request.json()
-
-    if (!courseId) {
-      return NextResponse.json({ error: "课程ID是必填项" }, { status: 400 })
+    // 检查权限：老师和老板可以为学生创建订单
+    if (!["TEACHER", "BOSS"].includes(session.user.role)) {
+      return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
-    // 检查课程是否存在
+    const body = await request.json()
+    const { studentId, courseId, amount, payTime } = body
+
+    // 验证必填字段
+    if (!studentId || !courseId) {
+      return NextResponse.json({ error: "学生和课程为必填项" }, { status: 400 })
+    }
+
+    // 验证学生是否存在
+    const student = await prisma.user.findFirst({
+      where: {
+        id: studentId,
+        role: "STUDENT",
+      },
+    })
+
+    if (!student) {
+      return NextResponse.json({ error: "指定的学生不存在" }, { status: 400 })
+    }
+
+    // 验证课程是否存在
     const course = await prisma.course.findUnique({
       where: { id: courseId },
     })
@@ -88,33 +131,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "课程不存在" }, { status: 404 })
     }
 
-    // 检查是否已经购买过
+    // 检查是否已经报名过
     const existingOrder = await prisma.order.findFirst({
       where: {
-        userId: session.user!.id,
+        studentId: studentId,
         courseId: courseId,
-        status: "PAID",
+        status: "REGISTERED",
       },
     })
 
     if (existingOrder) {
-      return NextResponse.json({ error: "您已经购买过这门课程" }, { status: 400 })
+      return NextResponse.json({ error: "该学生已经报名过这门课程" }, { status: 400 })
     }
 
     // 生成订单号
-    const orderNo = `OD${new Date().getFullYear()}${Date.now().toString().slice(-6)}`
+    const orderNo = generateOrderNo(Date.now() % 1000, new Date())
 
     const order = await prisma.order.create({
       data: {
         orderNo,
-        userId: session.user!.id,
+        studentId,
         courseId,
-        amount: course.price,
-        payMethod: payMethod || "ALIPAY",
-        status: "PENDING",
+        amount: amount || course.price, // 使用传入的金额或课程价格
+        status: "REGISTERED",
+        payTime: payTime ? new Date(payTime) : new Date(), // 支付时间
       },
       include: {
-        user: { select: { name: true } },
+        student: { select: { name: true } },
         course: { select: { title: true } },
       },
     })
@@ -122,8 +165,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "订单创建成功",
-        data: order,
+        message: "报名成功",
+        data: {
+          id: order.id,
+          orderNo: order.orderNo,
+          studentName: order.student.name,
+          courseTitle: order.course.title,
+          amount: order.amount,
+        },
       },
       { status: 201 }
     )

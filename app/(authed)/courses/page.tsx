@@ -29,17 +29,22 @@ function formatDate(input: string) {
 }
 
 interface Course {
-  id: string
+  id: number
+  displayCode: string
   title: string
-  description: string
+  subtitle?: string | null
   category: string
-  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  year: number
+  term: "SPRING" | "SUMMER" | "AUTUMN" | "WINTER"
   price: number
-  lessons: number
-  banner: string | null
+  banner?: string | null
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  address?: string | null
   teacher: string
-  students: number
+  teacherId: number
+  assistantId?: number | null
+  enrolledStudents: number
+  lessonCount: number
   createdAt: string
   updatedAt: string
 }
@@ -113,22 +118,35 @@ export default function CoursesPage() {
           data={courses}
           columns={[
             {
+              header: "编号",
+              accessorKey: "displayCode",
+              cell: ({ getValue }) => (
+                <span className="font-mono text-sm">{String(getValue())}</span>
+              ),
+            },
+            {
               header: "课程",
               accessorKey: "title",
-              cell: ({ row }) => <span className="font-medium">{row.original.title}</span>,
+              cell: ({ row }) => (
+                <div>
+                  <span className="font-medium">{row.original.title}</span>
+                  {row.original.subtitle && (
+                    <div className="text-xs text-muted-foreground">{row.original.subtitle}</div>
+                  )}
+                </div>
+              ),
             },
             { header: "分类", accessorKey: "category" },
-            { header: "讲师", accessorKey: "teacher" },
             {
-              header: "难度",
-              accessorKey: "level",
-              cell: ({ getValue }) =>
-                ({ BEGINNER: "入门", INTERMEDIATE: "进阶", ADVANCED: "高级" })[
-                  String(getValue()) as "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
-                ],
+              header: "学期",
+              accessorKey: "term",
+              cell: ({ row }) => {
+                return `${row.original.year}年${row.original.term}`
+              },
             },
-            { header: "课时", accessorKey: "lessons" },
-            { header: "学员", accessorKey: "students" },
+            { header: "讲师", accessorKey: "teacher" },
+            { header: "课时", accessorKey: "lessonCount" },
+            { header: "学员", accessorKey: "enrolledStudents" },
             {
               header: "价格",
               accessorKey: "price",
@@ -154,11 +172,11 @@ export default function CoursesPage() {
           {courses.map(c => {
             // 根据分类选择渐变色
             const gradients = {
-              前端: "from-emerald-400 to-emerald-600",
-              后端: "from-blue-400 to-blue-600",
-              数据: "from-orange-400 to-orange-600",
-              设计: "from-red-400 to-red-600",
-              测试: "from-purple-400 to-purple-600",
+              数学: "from-emerald-400 to-emerald-600",
+              英语: "from-blue-400 to-blue-600",
+              物理: "from-orange-400 to-orange-600",
+              化学: "from-red-400 to-red-600",
+              编程: "from-purple-400 to-purple-600",
             }
             const gradient =
               gradients[c.category as keyof typeof gradients] || "from-gray-400 to-gray-600"
@@ -169,8 +187,18 @@ export default function CoursesPage() {
                 className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
               >
                 <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
-                  {/* 状态标签 */}
+                  {/* 课程编号 */}
                   <div className="absolute top-4 left-4">
+                    <Badge
+                      variant="sale"
+                      className="text-white text-xs px-2 py-1 rounded-sm bg-white/20"
+                    >
+                      {c.displayCode}
+                    </Badge>
+                  </div>
+
+                  {/* 状态标签 */}
+                  <div className="absolute top-4 right-16">
                     <Badge
                       variant="sale"
                       className={`text-white text-xs px-2 py-1 rounded-sm ${
@@ -200,8 +228,20 @@ export default function CoursesPage() {
                   <div className="mt-8">
                     <h3 className="text-xl font-bold mb-2 line-clamp-2">{c.title}</h3>
                     <p className="text-white/90 text-sm line-clamp-2">
-                      {c.description || `${c.category} 专业课程，由 ${c.teacher} 授课`}
+                      {c.subtitle || `${c.category} 专业课程，由 ${c.teacher} 授课`}
                     </p>
+                    <div className="text-white/80 text-xs mt-1">
+                      {c.year}年
+                      {c.term === "SPRING"
+                        ? "春季"
+                        : c.term === "SUMMER"
+                          ? "暑期"
+                          : c.term === "AUTUMN"
+                            ? "秋季"
+                            : "冬季"}
+                      学期
+                      {c.address && ` · ${c.address}`}
+                    </div>
                   </div>
                 </div>
 
@@ -209,10 +249,9 @@ export default function CoursesPage() {
                 <div className="p-4 bg-card">
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                     <span className="flex items-center gap-1">
-                      {c.level === "BEGINNER" && "初级"}
-                      {c.level === "INTERMEDIATE" && "中级"}
-                      {c.level === "ADVANCED" && "高级"}· {c.students}人报名
+                      {c.lessonCount}课时 · {c.enrolledStudents}人报名
                     </span>
+                    <span className="text-xs">授课：{c.teacher}</span>
                   </div>
 
                   <div className="flex items-center justify-between">

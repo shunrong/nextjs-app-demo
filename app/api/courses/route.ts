@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
           OR: [
             { title: { contains: search, mode: "insensitive" as const } },
             { category: { contains: search, mode: "insensitive" as const } },
-            { teacher: { user: { name: { contains: search, mode: "insensitive" as const } } } },
+            { teacher: { name: { contains: search, mode: "insensitive" as const } } },
           ],
         }
       : {}
@@ -30,11 +30,12 @@ export async function GET(request: NextRequest) {
       prisma.course.findMany({
         where,
         include: {
-          teacher: {
-            include: { user: { select: { name: true } } },
-          },
+          teacher: { select: { name: true } }, // 主课老师
           _count: {
-            select: { enrollments: true },
+            select: {
+              orders: true, // 报名人数（通过订单统计）
+              lessons: true, // 课时数量
+            },
           },
         },
         skip: (page - 1) * limit,
@@ -44,18 +45,25 @@ export async function GET(request: NextRequest) {
       prisma.course.count({ where }),
     ])
 
+    // 格式化课程数据并添加显示编码
     const formattedCourses = courses.map(course => ({
       id: course.id,
+      displayCode: `C${String(course.id).padStart(3, "0")}`, // 动态生成显示编码
       title: course.title,
-      description: course.description,
+      subtitle: course.subtitle,
       category: course.category,
-      level: course.level,
+      year: course.year,
+      term: course.term,
       price: course.price,
-      lessons: course.lessons,
       banner: course.banner,
       status: course.status,
-      teacher: course.teacher.user.name,
-      students: course._count.enrollments,
+      address: course.address,
+      teacher: course.teacher.name,
+      teacherId: course.teacherId,
+      assistantId: course.assistantId,
+      // 统计信息
+      enrolledStudents: course._count.orders, // 报名学生数
+      lessonCount: course._count.lessons, // 课时数
       createdAt: course.createdAt,
       updatedAt: course.updatedAt,
     }))
@@ -77,40 +85,79 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !session.user || session.user.role !== "TEACHER") {
+    if (!session) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 })
+    }
+
+    // 检查权限：老师和老板可以创建课程
+    if (!["TEACHER", "BOSS"].includes(session.user.role)) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
-    const { title, description, category, level, price, lessons, banner } = await request.json()
+    const body = await request.json()
+    const {
+      title,
+      subtitle,
+      category,
+      year = new Date().getFullYear(),
+      term = "春季",
+      price,
+      address,
+      teacherId, // 指定主课老师ID
+      assistantId, // 可选的助教ID
+    } = body
 
-    if (!title || !category || !price) {
-      return NextResponse.json({ error: "标题、分类和价格是必填项" }, { status: 400 })
+    // 验证必填字段
+    if (!title || !category || !price || !teacherId) {
+      return NextResponse.json(
+        {
+          error: "标题、分类、价格和主课老师为必填项",
+        },
+        { status: 400 }
+      )
     }
 
-    // 获取教师资料
-    const teacherProfile = await prisma.teacherProfile.findUnique({
-      where: { userId: session.user!.id },
+    // 验证教师是否存在
+    const teacher = await prisma.user.findFirst({
+      where: {
+        id: teacherId,
+        role: "TEACHER",
+      },
     })
 
-    if (!teacherProfile) {
-      return NextResponse.json({ error: "教师资料不存在" }, { status: 400 })
+    if (!teacher) {
+      return NextResponse.json({ error: "指定的教师不存在" }, { status: 400 })
+    }
+
+    // 如果指定了助教，验证助教是否存在
+    if (assistantId) {
+      const assistant = await prisma.user.findFirst({
+        where: {
+          id: assistantId,
+          role: "TEACHER",
+        },
+      })
+
+      if (!assistant) {
+        return NextResponse.json({ error: "指定的助教不存在" }, { status: 400 })
+      }
     }
 
     const course = await prisma.course.create({
       data: {
         title,
-        description,
+        subtitle,
         category,
-        level: level || "BEGINNER",
+        year,
+        term,
         price: Math.round(price * 100), // 转换为分
-        lessons: lessons || 0,
-        banner,
-        teacherId: teacherProfile.id,
+        address,
+        teacherId,
+        assistantId,
+        status: "DRAFT", // 默认草稿状态
       },
       include: {
-        teacher: {
-          include: { user: { select: { name: true } } },
-        },
+        teacher: { select: { name: true } },
       },
     })
 
@@ -118,7 +165,13 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: "课程创建成功",
-        data: course,
+        data: {
+          id: course.id,
+          displayCode: `C${String(course.id).padStart(3, "0")}`,
+          title: course.title,
+          category: course.category,
+          teacher: course.teacher.name,
+        },
       },
       { status: 201 }
     )

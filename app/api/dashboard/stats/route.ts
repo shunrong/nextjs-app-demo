@@ -12,52 +12,72 @@ export async function GET() {
     }
 
     // 并行查询各种统计数据
-    const [totalStudents, totalCourses, totalOrders, totalTeachers, monthlyRevenue, recentOrders] =
-      await Promise.all([
-        // 总学员数
-        prisma.user.count({
-          where: { role: "STUDENT" },
-        }),
+    const [
+      totalStudents,
+      totalCourses,
+      totalOrders,
+      totalTeachers,
+      totalBosses,
+      monthlyRevenue,
+      recentOrders,
+    ] = await Promise.all([
+      // 总学员数
+      prisma.user.count({
+        where: { role: "STUDENT" },
+      }),
 
-        // 活跃课程数
-        prisma.course.count({
-          where: { status: "PUBLISHED" },
-        }),
+      // 活跃课程数
+      prisma.course.count({
+        where: { status: "PUBLISHED" },
+      }),
 
-        // 总订单数
-        prisma.order.count(),
+      // 总订单数（报名记录）
+      prisma.order.count({
+        where: { status: "REGISTERED" },
+      }),
 
-        // 在线教师数
-        prisma.user.count({
-          where: {
-            role: "TEACHER",
-            status: "ACTIVE",
+      // 在职教师数
+      prisma.user.count({
+        where: {
+          role: "TEACHER",
+        },
+      }),
+
+      // 老板数
+      prisma.user.count({
+        where: { role: "BOSS" },
+      }),
+
+      // 本月收入（所有已登记的订单）
+      prisma.order.aggregate({
+        where: {
+          status: "REGISTERED",
+          payTime: {
+            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
           },
-        }),
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
 
-        // 本月收入
-        prisma.order.aggregate({
-          where: {
-            status: "PAID",
-            paidAt: {
-              gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      // 最近订单
+      prisma.order.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          student: { select: { name: true } },
+          course: {
+            select: {
+              title: true,
+              category: true,
+              year: true,
+              term: true,
             },
           },
-          _sum: {
-            amount: true,
-          },
-        }),
-
-        // 最近订单
-        prisma.order.findMany({
-          take: 5,
-          orderBy: { createdAt: "desc" },
-          include: {
-            user: { select: { name: true } },
-            course: { select: { title: true } },
-          },
-        }),
-      ])
+        },
+      }),
+    ])
 
     // 课程分类统计
     const courseCategories = await prisma.course.groupBy({
@@ -68,21 +88,51 @@ export async function GET() {
       },
     })
 
+    // 年度/学期课程统计
+    const termCourses = await prisma.course.groupBy({
+      by: ["year", "term"],
+      _count: {
+        id: true,
+      },
+      orderBy: [{ year: "desc" }, { term: "asc" }],
+    })
+
+    // 请假统计
+    const leaveStats = await prisma.leave.count()
+
     const stats = {
+      // 基础统计
       totalStudents,
+      totalTeachers,
+      totalBosses,
       totalCourses,
       totalOrders,
-      totalTeachers,
+      totalLeaves: leaveStats,
+
+      // 收入统计
       monthlyRevenue: monthlyRevenue._sum.amount || 0,
+
+      // 课程分类统计
       courseCategories: courseCategories.map(cat => ({
         name: cat.category,
         count: cat._count.category,
       })),
+
+      // 学期课程统计
+      termCourses: termCourses.map(term => ({
+        year: term.year,
+        term: term.term,
+        count: term._count.id,
+      })),
+
+      // 最近订单
       recentOrders: recentOrders.map(order => ({
         id: order.id,
         orderNo: order.orderNo,
-        studentName: order.user.name,
+        studentName: order.student.name,
         courseTitle: order.course.title,
+        courseCategory: order.course.category,
+        courseTerm: `${order.course.year}年${order.course.term}`,
         amount: order.amount,
         status: order.status,
         createdAt: order.createdAt,

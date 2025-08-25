@@ -8,16 +8,27 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: { label: "邮箱", type: "email" },
+        phone: { label: "手机号", type: "text" },
         password: { label: "密码", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.phone || !credentials?.password) {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+        // 支持手机号或邮箱登录
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { phone: credentials.phone },
+              { email: credentials.phone }, // 如果输入的是邮箱格式
+            ],
+          },
+          include: {
+            student: true,
+            teacher: true,
+            boss: true,
+          },
         })
 
         if (!user || !user.password) {
@@ -31,38 +42,49 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id,
-          email: user.email,
+          id: user.id.toString(), // NextAuth 需要 string ID
+          email: user.email || user.phone, // 如果没有邮箱用手机号
           name: user.name,
+          image: user.avatar,
+          // 自定义字段
+          phone: user.phone,
           role: user.role,
-          image: user.image,
+          nick: user.nick,
         }
       },
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt", // 纯 JWT，不存数据库
   },
   callbacks: {
     async jwt({ token, user }) {
-      console.log("JWT callback:", { token: !!token, user: !!user })
+      // 首次登录时，将用户信息存入 token
       if (user) {
+        token.userId = parseInt(user.id) // 转回 Int 类型
+        token.phone = user.phone
         token.role = user.role
-        token.id = user.id
+        token.nick = user.nick
       }
       return token
     },
     async session({ session, token }) {
-      console.log("Session callback:", { session: !!session, token: !!token })
+      // 将 token 中的信息传递给 session
       if (token && session.user) {
-        session.user.id = token.sub!
+        session.user.id = token.userId as number
+        session.user.phone = token.phone as string
         session.user.role = token.role as string
+        session.user.nick = token.nick as string
       }
       return session
     },
   },
   pages: {
     signIn: "/login",
+  },
+  // JWT 配置
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 天
   },
   debug: process.env.NODE_ENV === "development",
 }
