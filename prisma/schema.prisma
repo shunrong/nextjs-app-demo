@@ -93,20 +93,19 @@ model Boss {
 
 // 课程表（商品表）
 model Course {
-  id          Int          @id @default(autoincrement())
-  title       String // 课程标题
-  subtitle    String? // 课程副标题描述
-  category    String // 课程专业：中国舞，拉丁舞，绘画，书法，口才
-  teacherId   Int // 主课老师ID
-  assistantId Int? // 助教ID（可选）
-  banner      String? // 封面图
-  year        Int // 课程开设年份
-  term        String // 课程学期：春季，暑期，秋季
-  status      CourseStatus @default(DRAFT) // 状态：待上架，开课中，已结课，已归档
-  price       Int // 价格（分）
-  address     String? // 上课地点
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        Int          @id @default(autoincrement())
+  title     String // 课程标题
+  subtitle  String? // 课程副标题描述
+  category  String // 课程专业：中国舞，拉丁舞，绘画，书法，口才
+  teacherId Int // 主课老师ID
+  banner    String? // 封面图
+  year      Int // 课程开设年份
+  term      CourseTerm // 课程学期：春季，暑期，秋季
+  status    CourseStatus @default(DRAFT) // 状态：待上架，开课中，已结课，已归档
+  price     Int // 价格（分）
+  address   String? // 上课地点
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   teacher User     @relation(fields: [teacherId], references: [id])
   lessons Lesson[]
@@ -200,7 +199,14 @@ enum LessonStatus {
   COMPLETED // 已完成
 }
 
+enum CourseTerm {
+  SPRING // 春季
+  SUMMER // 暑期
+  AUTUMN // 秋季
+  WINTER // 冬季
+}
+
 enum OrderStatus {
   REGISTERED // 已登记
-  COMPLETED // 已完成
+  CANCELLED // 已取消
 }

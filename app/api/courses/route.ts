@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
       address: course.address,
       teacher: course.teacher.name,
       teacherId: course.teacherId,
-      assistantId: course.assistantId,
       // 统计信息
       enrolledStudents: course._count.orders, // 报名学生数
       lessonCount: course._count.lessons, // 课时数
@@ -81,7 +80,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 创建课程
+// 添加课程
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -89,7 +88,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未登录" }, { status: 401 })
     }
 
-    // 检查权限：老师和老板可以创建课程
+    // 检查权限：老师和老板可以添加课程
     if (!["TEACHER", "BOSS"].includes(session.user.role)) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
@@ -100,18 +99,17 @@ export async function POST(request: NextRequest) {
       subtitle,
       category,
       year = new Date().getFullYear(),
-      term = "春季",
+      term = "SPRING",
       price,
       address,
       teacherId, // 指定主课老师ID
-      assistantId, // 可选的助教ID
     } = body
 
     // 验证必填字段
     if (!title || !category || !price || !teacherId) {
       return NextResponse.json(
         {
-          error: "标题、分类、价格和主课老师为必填项",
+          error: "标题、分类、价格和授课教师为必填项",
         },
         { status: 400 }
       )
@@ -129,20 +127,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "指定的教师不存在" }, { status: 400 })
     }
 
-    // 如果指定了助教，验证助教是否存在
-    if (assistantId) {
-      const assistant = await prisma.user.findFirst({
-        where: {
-          id: assistantId,
-          role: "TEACHER",
-        },
-      })
-
-      if (!assistant) {
-        return NextResponse.json({ error: "指定的助教不存在" }, { status: 400 })
-      }
-    }
-
     const course = await prisma.course.create({
       data: {
         title,
@@ -153,7 +137,6 @@ export async function POST(request: NextRequest) {
         price: Math.round(price * 100), // 转换为分
         address,
         teacherId,
-        assistantId,
         status: "DRAFT", // 默认草稿状态
       },
       include: {
@@ -176,7 +159,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error("创建课程失败:", error)
-    return NextResponse.json({ error: "创建课程失败" }, { status: 500 })
+    console.error("添加课程失败:", error)
+    return NextResponse.json({ error: "添加课程失败" }, { status: 500 })
   }
 }

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/data-table"
 import { useApi } from "@/hooks/use-api"
+import { getTermLabel } from "@/lib/term-utils"
 import { LayoutGrid, Table as TableIcon, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -100,16 +101,19 @@ export default function CoursesPage() {
           className="w-[260px]"
         />
 
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList>
-            <TabsTrigger value="table" aria-label="表格视图">
-              <TableIcon className="size-4" />
-            </TabsTrigger>
-            <TabsTrigger value="card" aria-label="卡片视图">
-              <LayoutGrid className="size-4" />
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => (window.location.href = "/courses/new")}>添加课程</Button>
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList>
+              <TabsTrigger value="table" aria-label="表格视图">
+                <TableIcon className="size-4" />
+              </TabsTrigger>
+              <TabsTrigger value="card" aria-label="卡片视图">
+                <LayoutGrid className="size-4" />
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       {tab === "table" ? (
@@ -141,7 +145,7 @@ export default function CoursesPage() {
               header: "学期",
               accessorKey: "term",
               cell: ({ row }) => {
-                return `${row.original.year}年${row.original.term}`
+                return `${row.original.year}年${getTermLabel(row.original.term)}`
               },
             },
             { header: "讲师", accessorKey: "teacher" },
@@ -164,6 +168,35 @@ export default function CoursesPage() {
               header: "更新于",
               accessorKey: "updatedAt",
               cell: ({ getValue }) => formatDate(String(getValue())),
+            },
+            {
+              header: "操作",
+              accessorKey: "id",
+              cell: ({ row }) => (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="link"
+                    onClick={() => (window.location.href = `/courses/${row.original.id}`)}
+                  >
+                    查看
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="link"
+                    onClick={() => (window.location.href = `/courses/${row.original.id}?mode=edit`)}
+                  >
+                    编辑
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="link"
+                    onClick={() => (window.location.href = `/courses/${row.original.id}?mode=copy`)}
+                  >
+                    复制
+                  </Button>
+                </div>
+              ),
             },
           ]}
         />
@@ -231,15 +264,7 @@ export default function CoursesPage() {
                       {c.subtitle || `${c.category} 专业课程，由 ${c.teacher} 授课`}
                     </p>
                     <div className="text-white/80 text-xs mt-1">
-                      {c.year}年
-                      {c.term === "SPRING"
-                        ? "春季"
-                        : c.term === "SUMMER"
-                          ? "暑期"
-                          : c.term === "AUTUMN"
-                            ? "秋季"
-                            : "冬季"}
-                      学期
+                      {c.year}年{getTermLabel(c.term)}学期
                       {c.address && ` · ${c.address}`}
                     </div>
                   </div>

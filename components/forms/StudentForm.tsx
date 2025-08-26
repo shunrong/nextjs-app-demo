@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -75,19 +75,22 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
     }
   }, [id, mode, initialData, form])
 
-  const fetchStudentData = async (studentId: string | number) => {
-    try {
-      const response = await fetch(`/api/students/${studentId}`)
-      const result = await response.json()
-      if (result.success) {
-        form.reset(result.data)
-      } else {
-        throw new Error(result.error)
+  const fetchStudentData = useCallback(
+    async (studentId: string | number) => {
+      try {
+        const response = await fetch(`/api/students/${studentId}`)
+        const result = await response.json()
+        if (result.success) {
+          form.reset(result.data)
+        } else {
+          throw new Error(result.error)
+        }
+      } catch {
+        toast.error("获取数据失败，请稍后重试")
       }
-    } catch (error) {
-      toast.error("获取数据失败，请稍后重试")
-    }
-  }
+    },
+    [form]
+  )
 
   const onSubmit = async (data: StudentFormData) => {
     try {

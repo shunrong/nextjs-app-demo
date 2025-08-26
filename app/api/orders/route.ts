@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { generateOrderNo } from "@/lib/display-codes"
+import { getTermLabel } from "@/lib/term-utils"
 
 // 获取订单列表
 export async function GET(request: NextRequest) {
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
       parentPhone: order.student.student?.parentPhone1,
       courseTitle: order.course.title,
       courseCategory: order.course.category,
-      courseTerm: `${order.course.year}年${order.course.term}`,
+      courseTerm: `${order.course.year}年${getTermLabel(order.course.term)}`,
       amount: order.amount,
       status: order.status,
       payTime: order.payTime,

@@ -44,7 +44,7 @@ interface Order {
   courseCategory: string
   courseTerm: string
   amount: number
-  status: "REGISTERED" | "REFUNDED"
+  status: "REGISTERED" | "CANCELLED"
   payTime?: string | null
   createdAt: string
 }
@@ -98,6 +98,7 @@ export default function OrdersPage() {
           }}
           className="w-[300px]"
         />
+        <Button onClick={() => (window.location.href = "/orders/new")}>报名缴费</Button>
       </div>
 
       <div className="overflow-x-auto rounded-md border">
@@ -112,6 +113,7 @@ export default function OrdersPage() {
               <TableHead>家长</TableHead>
               <TableHead>状态</TableHead>
               <TableHead>登记时间</TableHead>
+              <TableHead>操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -148,16 +150,34 @@ export default function OrdersPage() {
                 </TableCell>
                 <TableCell>
                   {o.status === "REGISTERED" && <span className="text-green-600">已登记</span>}
-                  {o.status === "REFUNDED" && <span className="text-blue-600">已退款</span>}
+                  {o.status === "CANCELLED" && <span className="text-red-600">已取消</span>}
                 </TableCell>
                 <TableCell>
                   {o.payTime ? formatDateTime(o.payTime) : formatDateTime(o.createdAt)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="link"
+                      onClick={() => (window.location.href = `/orders/${o.id}`)}
+                    >
+                      查看
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="link"
+                      onClick={() => (window.location.href = `/orders/${o.id}?mode=edit`)}
+                    >
+                      编辑
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
             {orders.length === 0 && !loading && (
               <TableRow>
-                <TableCell colSpan={8} className="p-6 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="p-6 text-center text-muted-foreground">
                   {query ? "没有匹配的订单" : "暂无订单数据"}
                 </TableCell>
               </TableRow>

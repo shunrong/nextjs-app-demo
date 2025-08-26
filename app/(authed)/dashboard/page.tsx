@@ -289,7 +289,7 @@ export default function DashboardPage() {
               className="h-20 flex flex-col items-center justify-center space-y-2"
             >
               <GraduationCap className="h-6 w-6" />
-              <span>创建课程</span>
+              <span>添加课程</span>
             </Button>
             <Button
               variant="outline"
