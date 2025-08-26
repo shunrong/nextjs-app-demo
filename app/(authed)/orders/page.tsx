@@ -90,7 +90,7 @@ export default function OrdersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Input
-          placeholder="搜索订单号/学员/课程"
+          placeholder="搜索订单号/学生/课程"
           value={query}
           onChange={e => {
             setQuery(e.target.value)
@@ -104,12 +104,12 @@ export default function OrdersPage() {
         <Table className="text-sm">
           <TableHeader>
             <TableRow>
-              <TableHead>订单号</TableHead>
-              <TableHead>学员</TableHead>
-              <TableHead>监护人</TableHead>
+              <TableHead>报名登记号</TableHead>
+              <TableHead>学生</TableHead>
               <TableHead>课程</TableHead>
               <TableHead>学期</TableHead>
               <TableHead>金额</TableHead>
+              <TableHead>家长</TableHead>
               <TableHead>状态</TableHead>
               <TableHead>登记时间</TableHead>
             </TableRow>
@@ -125,6 +125,16 @@ export default function OrdersPage() {
                   </div>
                 </TableCell>
                 <TableCell>
+                  <div>
+                    <div className="font-medium">{o.courseTitle}</div>
+                    <div className="text-xs text-muted-foreground">{o.courseCategory}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm">{o.courseTerm}</span>
+                </TableCell>
+                <TableCell>{formatCurrency(o.amount)}</TableCell>
+                <TableCell>
                   {o.parentName ? (
                     <div>
                       <div className="text-sm">{o.parentName}</div>
@@ -136,16 +146,6 @@ export default function OrdersPage() {
                     <span className="text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{o.courseTitle}</div>
-                    <div className="text-xs text-muted-foreground">{o.courseCategory}</div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm">{o.courseTerm}</span>
-                </TableCell>
-                <TableCell>{formatCurrency(o.amount)}</TableCell>
                 <TableCell>
                   {o.status === "REGISTERED" && <span className="text-green-600">已登记</span>}
                   {o.status === "REFUNDED" && <span className="text-blue-600">已退款</span>}

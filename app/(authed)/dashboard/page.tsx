@@ -110,21 +110,21 @@ export default function DashboardPage() {
 
       {/* 统计卡片 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="py-4">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">总学员数</CardTitle>
+            <CardTitle className="text-sm font-medium">总学生数</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalStudents.toLocaleString()}</div>
             <div className="flex items-center text-xs text-green-600">
               <TrendingUp className="h-3 w-3 mr-1" />
-              活跃学员
+              活跃学生
             </div>
           </CardContent>
         </Card>
 
-        <Card className="py-4">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">活跃课程</CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
@@ -138,7 +138,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="py-4">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">本月收入</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -155,7 +155,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="py-4">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">在线教师</CardTitle>
             <UserCheck className="h-4 w-4 text-muted-foreground" />
@@ -173,7 +173,7 @@ export default function DashboardPage() {
       {/* 图表区域 */}
       <div className="grid gap-4 lg:grid-cols-7">
         {/* 收入趋势图 */}
-        <Card className="col-span-4 py-4">
+        <Card className="col-span-4">
           <CardHeader>
             <CardTitle>收入趋势</CardTitle>
             <CardDescription>过去6个月的收入变化情况</CardDescription>
@@ -198,7 +198,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* 课程分类饼图 */}
-        <Card className="col-span-3 py-4">
+        <Card className="col-span-3">
           <CardHeader>
             <CardTitle>课程分类分布</CardTitle>
             <CardDescription>各类别课程数量</CardDescription>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
       </div>
 
       {/* 最近订单 */}
-      <Card className="py-4">
+      <Card>
         <CardHeader>
           <CardTitle>最近订单</CardTitle>
           <CardDescription>最新的课程购买记录</CardDescription>
@@ -273,7 +273,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* 快速操作 */}
-      <Card className="py-4">
+      <Card>
         <CardHeader>
           <CardTitle>快速操作</CardTitle>
           <CardDescription>常用功能快速入口</CardDescription>
@@ -282,7 +282,7 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Button className="h-20 flex flex-col items-center justify-center space-y-2">
               <Users className="h-6 w-6" />
-              <span>添加学员</span>
+              <span>添加学生</span>
             </Button>
             <Button
               variant="outline"

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 
-// 获取学员列表
+// 获取学生列表
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
-    console.error("获取学员失败:", error)
-    return NextResponse.json({ error: "获取学员失败" }, { status: 500 })
+    console.error("获取学生失败:", error)
+    return NextResponse.json({ error: "获取学生失败" }, { status: 500 })
   }
 }
 

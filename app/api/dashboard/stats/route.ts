@@ -21,7 +21,7 @@ export async function GET() {
       monthlyRevenue,
       recentOrders,
     ] = await Promise.all([
-      // 总学员数
+      // 总学生数
       prisma.user.count({
         where: { role: "STUDENT" },
       }),

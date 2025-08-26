@@ -28,12 +28,12 @@ const navMain = [
     icon: GraduationCap,
   },
   {
-    title: "订单管理",
+    title: "报名缴费",
     url: "/orders",
     icon: Receipt,
   },
   {
-    title: "学员档案",
+    title: "学生档案",
     url: "/students",
     icon: Users,
   },

@@ -146,7 +146,7 @@ export default function CoursesPage() {
             },
             { header: "讲师", accessorKey: "teacher" },
             { header: "课时", accessorKey: "lessonCount" },
-            { header: "学员", accessorKey: "enrolledStudents" },
+            { header: "学生", accessorKey: "enrolledStudents" },
             {
               header: "价格",
               accessorKey: "price",
@@ -184,7 +184,7 @@ export default function CoursesPage() {
             return (
               <Card
                 key={c.id}
-                className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                className="overflow-hidden py-0 border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
               >
                 <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
                   {/* 课程编号 */}
@@ -251,7 +251,7 @@ export default function CoursesPage() {
                     <span className="flex items-center gap-1">
                       {c.lessonCount}课时 · {c.enrolledStudents}人报名
                     </span>
-                    <span className="text-xs">授课：{c.teacher}</span>
+                    <span className="text-xs">授课老师：{c.teacher}</span>
                   </div>
 
                   <div className="flex items-center justify-between">

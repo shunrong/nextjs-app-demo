@@ -89,16 +89,19 @@ export default function StudentsPage() {
           }}
           className="w-[260px]"
         />
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList>
-            <TabsTrigger value="table" aria-label="表格视图">
-              <TableIcon className="size-4" />
-            </TabsTrigger>
-            <TabsTrigger value="card" aria-label="卡片视图">
-              <LayoutGrid className="size-4" />
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => (window.location.href = "/students/new")}>录入学生</Button>
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList>
+              <TabsTrigger value="table" aria-label="表格视图">
+                <TableIcon className="size-4" />
+              </TabsTrigger>
+              <TabsTrigger value="card" aria-label="卡片视图">
+                <LayoutGrid className="size-4" />
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       {tab === "table" ? (
@@ -142,6 +145,30 @@ export default function StudentsPage() {
               header: "入学时间",
               accessorKey: "joinedAt",
               cell: ({ getValue }) => formatDate(String(getValue())),
+            },
+            {
+              header: "操作",
+              accessorKey: "id",
+              cell: ({ row }) => (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="link"
+                    onClick={() => (window.location.href = `/students/${row.original.id}`)}
+                  >
+                    查看
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="link"
+                    onClick={() =>
+                      (window.location.href = `/students/${row.original.id}?mode=edit`)
+                    }
+                  >
+                    编辑
+                  </Button>
+                </div>
+              ),
             },
           ]}
         />

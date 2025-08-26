@@ -208,7 +208,7 @@ async function main() {
   const course3 = await prisma.course.create({
     data: {
       title: "中国舞提高班",
-      subtitle: "有基础的学员进阶课程",
+      subtitle: "有基础的学生进阶课程",
       category: "中国舞",
       teacherId: teacherUser1.id,
       year: 2024,
