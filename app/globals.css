@@ -122,27 +122,18 @@
 }
 
 /* Sonner toast 主题覆盖（基于 Toaster className="toaster"） */
+.toaster [data-sonner-toast] {
+  border: none !important;
+}
 .toaster [data-sonner-toast][data-type="success"] {
-  color: var(--color-green-500) !important;
-  [data-description] {
-    color: var(--color-green-500) !important;
-  }
+  background-color: var(--color-green-600) !important;
 }
 .toaster [data-sonner-toast][data-type="error"] {
-  color: var(--color-red-500) !important;
-  [data-description] {
-    color: var(--color-red-500) !important;
-  }
+  background-color: var(--color-red-600) !important;
 }
 .toaster [data-sonner-toast][data-type="warning"] {
-  color: var(--color-yellow-500) !important;
-  [data-description] {
-    color: var(--color-yellow-500) !important;
-  }
+  background-color: var(--color-yellow-600) !important;
 }
 .toaster [data-sonner-toast][data-type="info"] {
-  color: var(--color-blue-500) !important;
-  [data-description] {
-    color: var(--color-blue-500) !important;
-  }
+  background-color: var(--color-blue-600) !important;
 }

@@ -392,58 +392,6 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* 通知样式 Demo */}
-      <Card>
-        <CardHeader>
-          <CardTitle>通知样式 Demo</CardTitle>
-          <CardDescription>点击下方按钮体验不同类型的 toast</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              onClick={() =>
-                toast.success("操作成功", {
-                  position: "top-center",
-                  description: "数据已成功保存",
-                })
-              }
-            >
-              成功 Success
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                toast.error("操作失败", {
-                  description: "网络错误，请稍后重试",
-                })
-              }
-            >
-              失败 Error
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                toast.info("消息通知", {
-                  description: "这是一个信息提示",
-                })
-              }
-            >
-              消息 Info
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                toast.warning("警告提示", {
-                  description: "请检查表单输入",
-                })
-              }
-            >
-              警告 Warning
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

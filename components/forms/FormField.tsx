@@ -296,6 +296,43 @@ export function NumberField<T extends FieldValues>({
   )
 }
 
+// 日期时间字段
+export function DateTimeField<T extends FieldValues>({
+  form,
+  name,
+  label,
+  description,
+  placeholder,
+  disabled = false,
+  required = false,
+}: BaseFieldProps<T>) {
+  return (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>
+            {label}
+            {required && <span className="text-destructive ml-1">*</span>}
+          </FormLabel>
+          <FormControl>
+            <Input
+              {...field}
+              type="datetime-local"
+              placeholder={placeholder}
+              disabled={disabled}
+              value={field.value ?? ""}
+            />
+          </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
 // 异步选择字段
 interface AsyncSelectFieldProps<T extends FieldValues> extends BaseFieldProps<T> {
   apiEndpoint: string

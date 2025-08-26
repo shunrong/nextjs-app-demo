@@ -1,5 +1,28 @@
 import { z } from "zod"
 
+const lessonSchema = z.object({
+  id: z.number().optional(),
+  title: z.string().min(1, "课时标题不能为空"),
+  subtitle: z.string().optional(),
+  startTime: z.string().min(1, "请选择开始时间"),
+  endTime: z.string().min(1, "请选择结束时间"),
+  status: z.enum(["PENDING", "COMPLETED"]),
+})
+
+const studentSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  phone: z.string(),
+  email: z.string().nullable(),
+  gender: z.enum(["MALE", "FEMALE"]).nullable(),
+  orderId: z.number(),
+  orderNo: z.string(),
+  status: z.enum(["REGISTERED", "CANCELLED"]),
+  amount: z.number(),
+  payTime: z.string().nullable(),
+  createdAt: z.string(),
+})
+
 export const courseSchema = z.object({
   title: z
     .string()
@@ -22,6 +45,10 @@ export const courseSchema = z.object({
   address: z.string().max(100, "上课地点不能超过100个字符").optional(),
 
   banner: z.string().optional(),
+
+  lessons: z.array(lessonSchema).optional(),
+
+  students: z.array(studentSchema).optional(),
 })
 
 // 推导出 TypeScript 类型

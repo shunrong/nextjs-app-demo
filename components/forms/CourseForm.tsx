@@ -15,16 +15,17 @@ import {
   NumberField,
   AsyncSelectField,
 } from "@/components/forms/FormField"
+import { LessonManager } from "@/components/forms/LessonManager"
+import { StudentList } from "@/components/forms/StudentList"
 import { courseSchema, type CourseFormData } from "@/lib/schemas/course"
 import { FORM_CONFIGS, type FormMode } from "@/types/form"
 
 interface CourseFormProps {
   id?: string | number
   mode: FormMode
-  initialData?: CourseFormData | null
 }
 
-export function CourseForm({ id, mode, initialData }: CourseFormProps) {
+export function CourseForm({ id, mode }: CourseFormProps) {
   const router = useRouter()
   const config = FORM_CONFIGS[mode]
 
@@ -40,6 +41,7 @@ export function CourseForm({ id, mode, initialData }: CourseFormProps) {
       teacherId: 0,
       address: "",
       banner: "",
+      lessons: [],
     },
   })
 
@@ -58,29 +60,34 @@ export function CourseForm({ id, mode, initialData }: CourseFormProps) {
         address: "",
         banner: "",
       })
-    } else if (mode === "copy" && initialData) {
-      // 复制模式 - 清除某些字段
-      form.reset({
-        ...initialData,
-        title: `${initialData.title} - 副本`,
-        year: new Date().getFullYear(), // 新的年份
-      })
-    } else if (initialData) {
-      // 查看/编辑模式
-      form.reset(initialData)
     } else if (id) {
       // 从 API 获取数据
       fetchCourseData(id)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, mode, initialData])
+  }, [id, mode])
 
   const fetchCourseData = async (courseId: string | number) => {
     try {
       const response = await fetch(`/api/courses/${courseId}`)
       const result = await response.json()
       if (result.success) {
-        form.reset(result.data)
+        // 确保 lessons 数据格式正确
+        const courseData = {
+          ...result.data,
+          lessons:
+            result.data.lessons?.map(
+              (lesson: { startTime: string; endTime: string; [key: string]: unknown }) => ({
+                ...lesson,
+                startTime: lesson.startTime
+                  ? new Date(lesson.startTime).toISOString().slice(0, 16)
+                  : "",
+                endTime: lesson.endTime ? new Date(lesson.endTime).toISOString().slice(0, 16) : "",
+              })
+            ) || [],
+          students: result.data.students || [],
+        }
+        form.reset(courseData)
       } else {
         throw new Error(result.error)
       }
@@ -94,10 +101,19 @@ export function CourseForm({ id, mode, initialData }: CourseFormProps) {
       const endpoint = mode === "edit" ? `/api/courses/${id}` : "/api/courses"
       const method = mode === "edit" ? "PUT" : "POST"
 
+      // 确保 lessons 数据格式正确
+      const submitData = {
+        ...data,
+        lessons: data.lessons?.map(lesson => ({
+          ...lesson,
+          status: lesson.status || "PENDING",
+        })),
+      }
+
       const response = await fetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(submitData),
       })
 
       const result = await response.json()
@@ -146,6 +162,9 @@ export function CourseForm({ id, mode, initialData }: CourseFormProps) {
     { label: "秋季", value: "AUTUMN" },
     { label: "冬季", value: "WINTER" },
   ]
+
+  const { students } = form.getValues()
+  console.log({ students, mode }, "initialData")
 
   return (
     <div className="space-y-6">
@@ -271,6 +290,12 @@ export function CourseForm({ id, mode, initialData }: CourseFormProps) {
               />
             </CardContent>
           </Card>
+
+          {/* 课时管理 */}
+          <LessonManager disabled={config.readonly} />
+
+          {/* 报名管理 - 仅在查看模式下显示 */}
+          {mode === "view" && students && <StudentList students={students} />}
 
           {/* 操作按钮 */}
           {config.showActions && (
