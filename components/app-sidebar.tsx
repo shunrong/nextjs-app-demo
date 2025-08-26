@@ -2,7 +2,14 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, GraduationCap, Users, UserRound, Receipt } from "lucide-react"
+import {
+  LayoutDashboard,
+  GraduationCap,
+  Users,
+  UserRound,
+  Receipt,
+  CalendarDays,
+} from "lucide-react"
 
 import { NavLogo } from "@/components/nav-logo"
 import { NavMain } from "@/components/nav-main"
@@ -31,6 +38,11 @@ const navMain = [
     title: "报名缴费",
     url: "/orders",
     icon: Receipt,
+  },
+  {
+    title: "请假记录",
+    url: "/leaves",
+    icon: CalendarDays,
   },
   {
     title: "学生档案",
