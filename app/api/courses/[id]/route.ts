@@ -5,14 +5,15 @@ import prisma from "@/lib/prisma"
 import { courseSchema } from "@/lib/schemas/course"
 
 // 获取单个课程详情
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: "未登录" }, { status: 401 })
     }
 
-    const courseId = parseInt(params.id)
+    const { id } = await params
+    const courseId = parseInt(id)
     if (isNaN(courseId)) {
       return NextResponse.json({ error: "无效的课程ID" }, { status: 400 })
     }
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // 更新课程信息
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
@@ -65,7 +66,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
-    const courseId = parseInt(params.id)
+    const { id } = await params
+    const courseId = parseInt(id)
     if (isNaN(courseId)) {
       return NextResponse.json({ error: "无效的课程ID" }, { status: 400 })
     }
@@ -119,7 +121,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // 删除课程
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
@@ -131,7 +136,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
-    const courseId = parseInt(params.id)
+    const { id } = await params
+    const courseId = parseInt(id)
     if (isNaN(courseId)) {
       return NextResponse.json({ error: "无效的课程ID" }, { status: 400 })
     }

@@ -9,8 +9,8 @@ export const orderSchema = z.object({
 
   orderNo: z.string().min(1, "订单号不能为空"),
 
-  status: z.enum(["REGISTERED", "CANCELLED"], {
-    errorMap: () => ({ message: "请选择订单状态" }),
+  status: z.enum(["REGISTERED", "CANCELLED"]).refine(val => val !== undefined, {
+    message: "请选择订单状态",
   }),
 
   payTime: z.string().optional(),

@@ -1,15 +1,18 @@
 import { CourseForm } from "@/components/forms/CourseForm"
 import { FormMode } from "@/types/form"
 
-export default function CourseDetailPage({
+export default async function CourseDetailPage({
   params,
   searchParams,
 }: {
-  params: { id: string }
-  searchParams: { mode?: string }
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ mode?: string }>
 }) {
-  const isNew = params.id === "new"
-  const mode = (isNew ? "create" : (searchParams.mode as FormMode) || "view") as FormMode
+  const { id } = await params
+  const { mode: queryMode } = await searchParams
 
-  return <CourseForm id={isNew ? undefined : params.id} mode={mode} />
+  const isNew = id === "new"
+  const mode = (isNew ? "create" : (queryMode as FormMode) || "view") as FormMode
+
+  return <CourseForm id={isNew ? undefined : id} mode={mode} />
 }

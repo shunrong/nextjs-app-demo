@@ -5,14 +5,15 @@ import prisma from "@/lib/prisma"
 import { orderSchema } from "@/lib/schemas/order"
 
 // 获取单个订单详情
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: "未登录" }, { status: 401 })
     }
 
-    const orderId = parseInt(params.id)
+    const { id } = await params
+    const orderId = parseInt(id)
     if (isNaN(orderId)) {
       return NextResponse.json({ error: "无效的订单ID" }, { status: 400 })
     }
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // 更新订单信息
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
@@ -63,7 +64,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
-    const orderId = parseInt(params.id)
+    const { id } = await params
+    const orderId = parseInt(id)
     if (isNaN(orderId)) {
       return NextResponse.json({ error: "无效的订单ID" }, { status: 400 })
     }
@@ -120,7 +122,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // 删除订单
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
@@ -132,7 +137,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
-    const orderId = parseInt(params.id)
+    const { id } = await params
+    const orderId = parseInt(id)
     if (isNaN(orderId)) {
       return NextResponse.json({ error: "无效的订单ID" }, { status: 400 })
     }
