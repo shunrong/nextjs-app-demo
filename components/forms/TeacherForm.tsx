@@ -53,7 +53,8 @@ export function TeacherForm({ id, mode, initialData }: TeacherFormProps) {
       // 从 API 获取数据
       fetchTeacherData(id)
     }
-  }, [id, mode, initialData, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, mode, initialData])
 
   const fetchTeacherData = useCallback(
     async (teacherId: string | number) => {

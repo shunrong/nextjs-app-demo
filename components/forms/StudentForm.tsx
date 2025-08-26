@@ -73,7 +73,8 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
       // 从 API 获取数据
       fetchStudentData(id)
     }
-  }, [id, mode, initialData, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, mode, initialData])
 
   const fetchStudentData = useCallback(
     async (studentId: string | number) => {

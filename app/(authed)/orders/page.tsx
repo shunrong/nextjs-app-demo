@@ -12,8 +12,18 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useApi } from "@/hooks/use-api"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
+import { Skeleton } from "@/components/ui/skeleton"
 
-const PAGE_SIZE = 12
+const PAGE_SIZE = 10
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("zh-CN", {
@@ -56,8 +66,6 @@ export default function OrdersPage() {
   const {
     data: orders,
     loading,
-    error,
-    total,
     totalPages,
   } = useApi<Order>("/api/orders", {
     page: pageIndex,
@@ -70,21 +78,7 @@ export default function OrdersPage() {
     setPageIndex(n)
   }
 
-  if (loading && orders.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-muted-foreground">加载中...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-destructive">加载失败: {error}</div>
-      </div>
-    )
-  }
+  const showLoading = loading
 
   return (
     <div className="space-y-4">
@@ -102,125 +96,194 @@ export default function OrdersPage() {
       </div>
 
       <div className="overflow-x-auto rounded-md border">
-        <Table className="text-sm">
-          <TableHeader>
-            <TableRow>
-              <TableHead>报名登记号</TableHead>
-              <TableHead>学生</TableHead>
-              <TableHead>课程</TableHead>
-              <TableHead>学期</TableHead>
-              <TableHead>金额</TableHead>
-              <TableHead>家长</TableHead>
-              <TableHead>状态</TableHead>
-              <TableHead>登记时间</TableHead>
-              <TableHead>操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map(o => (
-              <TableRow key={o.id}>
-                <TableCell className="font-mono text-xs">{o.orderNo}</TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{o.studentName}</div>
-                    <div className="text-xs text-muted-foreground">{o.studentPhone}</div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{o.courseTitle}</div>
-                    <div className="text-xs text-muted-foreground">{o.courseCategory}</div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm">{o.courseTerm}</span>
-                </TableCell>
-                <TableCell>{formatCurrency(o.amount)}</TableCell>
-                <TableCell>
-                  {o.parentName ? (
-                    <div>
-                      <div className="text-sm">{o.parentName}</div>
-                      {o.parentPhone && (
-                        <div className="text-xs text-muted-foreground">{o.parentPhone}</div>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {o.status === "REGISTERED" && <span className="text-green-600">已登记</span>}
-                  {o.status === "CANCELLED" && <span className="text-red-600">已取消</span>}
-                </TableCell>
-                <TableCell>
-                  {o.payTime ? formatDateTime(o.payTime) : formatDateTime(o.createdAt)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="link"
-                      onClick={() => (window.location.href = `/orders/${o.id}`)}
-                    >
-                      查看
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="link"
-                      onClick={() => (window.location.href = `/orders/${o.id}?mode=edit`)}
-                    >
-                      编辑
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+        {showLoading ? (
+          <div className="p-4 space-y-2">
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
             ))}
-            {orders.length === 0 && !loading && (
+          </div>
+        ) : (
+          <Table className="text-sm">
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={9} className="p-6 text-center text-muted-foreground">
-                  {query ? "没有匹配的订单" : "暂无订单数据"}
-                </TableCell>
+                <TableHead>报名登记号</TableHead>
+                <TableHead>学生</TableHead>
+                <TableHead>课程</TableHead>
+                <TableHead>学期</TableHead>
+                <TableHead>金额</TableHead>
+                <TableHead>家长</TableHead>
+                <TableHead>状态</TableHead>
+                <TableHead>登记时间</TableHead>
+                <TableHead>操作</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {orders.map(o => (
+                <TableRow key={o.id}>
+                  <TableCell className="font-mono text-xs">{o.orderNo}</TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{o.studentName}</div>
+                      <div className="text-xs text-muted-foreground">{o.studentPhone}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{o.courseTitle}</div>
+                      <div className="text-xs text-muted-foreground">{o.courseCategory}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm">{o.courseTerm}</span>
+                  </TableCell>
+                  <TableCell>{formatCurrency(o.amount)}</TableCell>
+                  <TableCell>
+                    {o.parentName ? (
+                      <div>
+                        <div className="text-sm">{o.parentName}</div>
+                        {o.parentPhone && (
+                          <div className="text-xs text-muted-foreground">{o.parentPhone}</div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {o.status === "REGISTERED" && <span className="text-green-600">已登记</span>}
+                    {o.status === "CANCELLED" && <span className="text-red-600">已取消</span>}
+                  </TableCell>
+                  <TableCell>
+                    {o.payTime ? formatDateTime(o.payTime) : formatDateTime(o.createdAt)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="link"
+                        onClick={() => (window.location.href = `/orders/${o.id}`)}
+                      >
+                        查看
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        onClick={() => (window.location.href = `/orders/${o.id}?mode=edit`)}
+                      >
+                        编辑
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {orders.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell colSpan={9} className="p-6 text-center text-muted-foreground">
+                    {query ? "没有匹配的订单" : "暂无订单数据"}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          共 {total} 条 · 第 {pageIndex}/{totalPages} 页
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={() => goToPage(1)}
-            disabled={pageIndex === 1 || loading}
-          >
-            首页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => goToPage(pageIndex - 1)}
-            disabled={pageIndex === 1 || loading}
-          >
-            上一页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => goToPage(pageIndex + 1)}
-            disabled={pageIndex === totalPages || loading}
-          >
-            下一页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => goToPage(totalPages)}
-            disabled={pageIndex === totalPages || loading}
-          >
-            末页
-          </Button>
-        </div>
-      </div>
+      {!loading && totalPages > 1 && (
+        <Pagination className="flex items-center justify-center">
+          {(() => {
+            const max = totalPages || 1
+            const canPrev = pageIndex > 1 && !loading
+            const canNext = pageIndex < max && !loading
+            const start = Math.max(2, pageIndex - 1)
+            const end = Math.min(max - 1, pageIndex + 1)
+            const showLeftEllipsis = start > 2
+            const showRightEllipsis = end < max - 1
+
+            return (
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={e => {
+                      e.preventDefault()
+                      if (canPrev) goToPage(pageIndex - 1)
+                    }}
+                    className={!canPrev ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+
+                <PaginationItem>
+                  <PaginationLink
+                    href="#"
+                    isActive={pageIndex === 1}
+                    onClick={e => {
+                      e.preventDefault()
+                      goToPage(1)
+                    }}
+                  >
+                    1
+                  </PaginationLink>
+                </PaginationItem>
+
+                {showLeftEllipsis && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+
+                {Array.from({ length: Math.max(0, end - start + 1) }, (_, i) => start + i).map(
+                  n => (
+                    <PaginationItem key={n}>
+                      <PaginationLink
+                        href="#"
+                        isActive={pageIndex === n}
+                        onClick={e => {
+                          e.preventDefault()
+                          goToPage(n)
+                        }}
+                      >
+                        {n}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+
+                {showRightEllipsis && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+
+                {max > 1 && (
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      isActive={pageIndex === max}
+                      onClick={e => {
+                        e.preventDefault()
+                        goToPage(max)
+                      }}
+                    >
+                      {max}
+                    </PaginationLink>
+                  </PaginationItem>
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={e => {
+                      e.preventDefault()
+                      if (canNext) goToPage(pageIndex + 1)
+                    }}
+                    className={!canNext ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            )
+          })()}
+        </Pagination>
+      )}
     </div>
   )
 }

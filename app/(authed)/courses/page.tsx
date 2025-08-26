@@ -10,8 +10,18 @@ import { useApi } from "@/hooks/use-api"
 import { getTermLabel } from "@/lib/term-utils"
 import { LayoutGrid, Table as TableIcon, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
 
-const PAGE_SIZE = 8
+const PAGE_SIZE = 10
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("zh-CN", {
@@ -58,8 +68,6 @@ export default function CoursesPage() {
   const {
     data: courses,
     loading,
-    error,
-    total,
     totalPages,
   } = useApi<Course>("/api/courses", {
     page: pageIndex,
@@ -72,21 +80,7 @@ export default function CoursesPage() {
     setPageIndex(n)
   }
 
-  if (loading && courses.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-muted-foreground">加载中...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-destructive">加载失败: {error}</div>
-      </div>
-    )
-  }
+  const showLoading = loading
 
   return (
     <div className="space-y-4">
@@ -105,11 +99,11 @@ export default function CoursesPage() {
           <Button onClick={() => (window.location.href = "/courses/new")}>添加课程</Button>
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList>
-              <TabsTrigger value="table" aria-label="表格视图">
-                <TableIcon className="size-4" />
-              </TabsTrigger>
               <TabsTrigger value="card" aria-label="卡片视图">
                 <LayoutGrid className="size-4" />
+              </TabsTrigger>
+              <TabsTrigger value="table" aria-label="表格视图">
+                <TableIcon className="size-4" />
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -117,182 +111,205 @@ export default function CoursesPage() {
       </div>
 
       {tab === "table" ? (
-        <DataTable
-          pageSize={PAGE_SIZE}
-          data={courses}
-          columns={[
-            {
-              header: "编号",
-              accessorKey: "displayCode",
-              cell: ({ getValue }) => (
-                <span className="font-mono text-sm">{String(getValue())}</span>
-              ),
-            },
-            {
-              header: "课程",
-              accessorKey: "title",
-              cell: ({ row }) => (
-                <div>
-                  <span className="font-medium">{row.original.title}</span>
-                  {row.original.subtitle && (
-                    <div className="text-xs text-muted-foreground">{row.original.subtitle}</div>
-                  )}
-                </div>
-              ),
-            },
-            { header: "分类", accessorKey: "category" },
-            {
-              header: "学期",
-              accessorKey: "term",
-              cell: ({ row }) => {
-                return `${row.original.year}年${getTermLabel(row.original.term)}`
+        showLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+        ) : (
+          <DataTable
+            pageSize={PAGE_SIZE}
+            data={courses}
+            columns={[
+              {
+                header: "编号",
+                accessorKey: "displayCode",
+                cell: ({ getValue }) => (
+                  <span className="font-mono text-sm">{String(getValue())}</span>
+                ),
               },
-            },
-            { header: "讲师", accessorKey: "teacher" },
-            { header: "课时", accessorKey: "lessonCount" },
-            { header: "学生", accessorKey: "enrolledStudents" },
-            {
-              header: "价格",
-              accessorKey: "price",
-              cell: ({ getValue }) => formatCurrency(Number(getValue())),
-            },
-            {
-              header: "状态",
-              accessorKey: "status",
-              cell: ({ getValue }) =>
-                ({ DRAFT: "草稿", PUBLISHED: "已发布", ARCHIVED: "已归档" })[
-                  String(getValue()) as "DRAFT" | "PUBLISHED" | "ARCHIVED"
-                ],
-            },
-            {
-              header: "更新于",
-              accessorKey: "updatedAt",
-              cell: ({ getValue }) => formatDate(String(getValue())),
-            },
-            {
-              header: "操作",
-              accessorKey: "id",
-              cell: ({ row }) => (
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="link"
-                    onClick={() => (window.location.href = `/courses/${row.original.id}`)}
-                  >
-                    查看
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    onClick={() => (window.location.href = `/courses/${row.original.id}?mode=edit`)}
-                  >
-                    编辑
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    onClick={() => (window.location.href = `/courses/${row.original.id}?mode=copy`)}
-                  >
-                    复制
-                  </Button>
-                </div>
-              ),
-            },
-          ]}
-        />
+              {
+                header: "课程",
+                accessorKey: "title",
+                cell: ({ row }) => (
+                  <div>
+                    <span className="font-medium">{row.original.title}</span>
+                    {row.original.subtitle && (
+                      <div className="text-xs text-muted-foreground">{row.original.subtitle}</div>
+                    )}
+                  </div>
+                ),
+              },
+              { header: "分类", accessorKey: "category" },
+              {
+                header: "学期",
+                accessorKey: "term",
+                cell: ({ row }) => {
+                  return `${row.original.year}年${getTermLabel(row.original.term)}`
+                },
+              },
+              { header: "讲师", accessorKey: "teacher" },
+              { header: "课时", accessorKey: "lessonCount" },
+              { header: "学生", accessorKey: "enrolledStudents" },
+              {
+                header: "价格",
+                accessorKey: "price",
+                cell: ({ getValue }) => formatCurrency(Number(getValue())),
+              },
+              {
+                header: "状态",
+                accessorKey: "status",
+                cell: ({ getValue }) =>
+                  ({ DRAFT: "草稿", PUBLISHED: "已发布", ARCHIVED: "已归档" })[
+                    String(getValue()) as "DRAFT" | "PUBLISHED" | "ARCHIVED"
+                  ],
+              },
+              {
+                header: "更新于",
+                accessorKey: "updatedAt",
+                cell: ({ getValue }) => formatDate(String(getValue())),
+              },
+              {
+                header: "操作",
+                accessorKey: "id",
+                cell: ({ row }) => (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="link"
+                      onClick={() => (window.location.href = `/courses/${row.original.id}`)}
+                    >
+                      查看
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="link"
+                      onClick={() =>
+                        (window.location.href = `/courses/${row.original.id}?mode=edit`)
+                      }
+                    >
+                      编辑
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="link"
+                      onClick={() =>
+                        (window.location.href = `/courses/${row.original.id}?mode=copy`)
+                      }
+                    >
+                      复制
+                    </Button>
+                  </div>
+                ),
+              },
+            ]}
+          />
+        )
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {courses.map(c => {
-            // 根据分类选择渐变色
-            const gradients = {
-              数学: "from-emerald-400 to-emerald-600",
-              英语: "from-blue-400 to-blue-600",
-              物理: "from-orange-400 to-orange-600",
-              化学: "from-red-400 to-red-600",
-              编程: "from-purple-400 to-purple-600",
-            }
-            const gradient =
-              gradients[c.category as keyof typeof gradients] || "from-gray-400 to-gray-600"
-
-            return (
-              <Card
-                key={c.id}
-                className="overflow-hidden py-0 border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-              >
-                <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
-                  {/* 课程编号 */}
-                  <div className="absolute top-4 left-4">
-                    <Badge
-                      variant="sale"
-                      className="text-white text-xs px-2 py-1 rounded-sm bg-white/20"
-                    >
-                      {c.displayCode}
-                    </Badge>
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {showLoading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="overflow-hidden py-0 border-0 shadow-lg">
+                  <div className="p-6">
+                    <Skeleton className="h-5 w-20 mb-4" />
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-2/3 mb-2" />
+                    <Skeleton className="h-4 w-1/3" />
                   </div>
+                </Card>
+              ))
+            : courses.map(c => {
+                // 根据分类选择渐变色
+                const gradients = {
+                  数学: "from-emerald-400 to-emerald-600",
+                  英语: "from-blue-400 to-blue-600",
+                  物理: "from-orange-400 to-orange-600",
+                  化学: "from-red-400 to-red-600",
+                  编程: "from-purple-400 to-purple-600",
+                }
+                const gradient =
+                  gradients[c.category as keyof typeof gradients] || "from-gray-400 to-gray-600"
 
-                  {/* 状态标签 */}
-                  <div className="absolute top-4 right-16">
-                    <Badge
-                      variant="sale"
-                      className={`text-white text-xs px-2 py-1 rounded-sm ${
-                        c.status === "PUBLISHED"
-                          ? "bg-green-500"
-                          : c.status === "DRAFT"
-                            ? "bg-yellow-500"
-                            : "bg-gray-500"
-                      }`}
-                    >
-                      {c.status === "PUBLISHED"
-                        ? "已发布"
-                        : c.status === "DRAFT"
-                          ? "草稿"
-                          : "已归档"}
-                    </Badge>
-                  </div>
+                return (
+                  <Card
+                    key={c.id}
+                    className="overflow-hidden py-0 border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                  >
+                    <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
+                      {/* 课程编号 */}
+                      <div className="absolute top-4 left-4">
+                        <Badge
+                          variant="sale"
+                          className="text-white text-xs px-2 py-1 rounded-sm bg-white/20"
+                        >
+                          {c.displayCode}
+                        </Badge>
+                      </div>
 
-                  {/* 图标 */}
-                  <div className="absolute top-4 right-4">
-                    <div className="bg-white/20 rounded-lg p-3">
-                      <BookOpen className="size-8 text-white" />
+                      {/* 状态标签 */}
+                      <div className="absolute top-4 right-16">
+                        <Badge
+                          variant="sale"
+                          className={`text-white text-xs px-2 py-1 rounded-sm ${
+                            c.status === "PUBLISHED"
+                              ? "bg-green-500"
+                              : c.status === "DRAFT"
+                                ? "bg-yellow-500"
+                                : "bg-gray-500"
+                          }`}
+                        >
+                          {c.status === "PUBLISHED"
+                            ? "已发布"
+                            : c.status === "DRAFT"
+                              ? "草稿"
+                              : "已归档"}
+                        </Badge>
+                      </div>
+
+                      {/* 图标 */}
+                      <div className="absolute top-4 right-4">
+                        <div className="bg-white/20 rounded-lg p-3">
+                          <BookOpen className="size-8 text-white" />
+                        </div>
+                      </div>
+
+                      {/* 标题和描述 */}
+                      <div className="mt-8">
+                        <h3 className="text-xl font-bold mb-2 line-clamp-2">{c.title}</h3>
+                        <p className="text-white/90 text-sm line-clamp-2">
+                          {c.subtitle || `${c.category} 专业课程，由 ${c.teacher} 授课`}
+                        </p>
+                        <div className="text-white/80 text-xs mt-1">
+                          {c.year}年{getTermLabel(c.term)}学期
+                          {c.address && ` · ${c.address}`}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* 标题和描述 */}
-                  <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-2 line-clamp-2">{c.title}</h3>
-                    <p className="text-white/90 text-sm line-clamp-2">
-                      {c.subtitle || `${c.category} 专业课程，由 ${c.teacher} 授课`}
-                    </p>
-                    <div className="text-white/80 text-xs mt-1">
-                      {c.year}年{getTermLabel(c.term)}学期
-                      {c.address && ` · ${c.address}`}
+                    {/* 底部信息 */}
+                    <div className="p-4 bg-card">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                        <span className="flex items-center gap-1">
+                          {c.lessonCount}课时 · {c.enrolledStudents}人报名
+                        </span>
+                        <span className="text-xs">授课老师：{c.teacher}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className="text-destructive text-lg font-bold">
+                            {formatCurrency(c.price)}
+                          </span>
+                          <span className="text-muted-foreground text-sm line-through">
+                            {formatCurrency(Math.floor(c.price * 1.2))}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* 底部信息 */}
-                <div className="p-4 bg-card">
-                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                    <span className="flex items-center gap-1">
-                      {c.lessonCount}课时 · {c.enrolledStudents}人报名
-                    </span>
-                    <span className="text-xs">授课老师：{c.teacher}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <span className="text-destructive text-lg font-bold">
-                        {formatCurrency(c.price)}
-                      </span>
-                      <span className="text-muted-foreground text-sm line-through">
-                        {formatCurrency(Math.floor(c.price * 1.2))}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            )
-          })}
+                  </Card>
+                )
+              })}
           {courses.length === 0 && !loading && (
             <div className="col-span-full py-10 text-center text-muted-foreground">
               {query ? "没有匹配的课程" : "暂无课程数据"}
@@ -301,41 +318,102 @@ export default function CoursesPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          共 {total} 条 · 第 {pageIndex}/{totalPages} 页
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={() => goToPage(1)}
-            disabled={pageIndex === 1 || loading}
-          >
-            首页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => goToPage(pageIndex - 1)}
-            disabled={pageIndex === 1 || loading}
-          >
-            上一页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => goToPage(pageIndex + 1)}
-            disabled={pageIndex === totalPages || loading}
-          >
-            下一页
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => goToPage(totalPages)}
-            disabled={pageIndex === totalPages || loading}
-          >
-            末页
-          </Button>
-        </div>
-      </div>
+      {!loading && totalPages > 1 && (
+        <Pagination className="flex items-center justify-center">
+          {(() => {
+            const max = totalPages || 1
+            const canPrev = pageIndex > 1 && !loading
+            const canNext = pageIndex < max && !loading
+            const start = Math.max(2, pageIndex - 1)
+            const end = Math.min(max - 1, pageIndex + 1)
+            const showLeftEllipsis = start > 2
+            const showRightEllipsis = end < max - 1
+
+            return (
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={e => {
+                      e.preventDefault()
+                      if (canPrev) goToPage(pageIndex - 1)
+                    }}
+                    className={!canPrev ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+
+                <PaginationItem>
+                  <PaginationLink
+                    href="#"
+                    isActive={pageIndex === 1}
+                    onClick={e => {
+                      e.preventDefault()
+                      goToPage(1)
+                    }}
+                  >
+                    1
+                  </PaginationLink>
+                </PaginationItem>
+
+                {showLeftEllipsis && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+
+                {Array.from({ length: Math.max(0, end - start + 1) }, (_, i) => start + i).map(
+                  n => (
+                    <PaginationItem key={n}>
+                      <PaginationLink
+                        href="#"
+                        isActive={pageIndex === n}
+                        onClick={e => {
+                          e.preventDefault()
+                          goToPage(n)
+                        }}
+                      >
+                        {n}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+
+                {showRightEllipsis && (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                )}
+
+                {max > 1 && (
+                  <PaginationItem>
+                    <PaginationLink
+                      href="#"
+                      isActive={pageIndex === max}
+                      onClick={e => {
+                        e.preventDefault()
+                        goToPage(max)
+                      }}
+                    >
+                      {max}
+                    </PaginationLink>
+                  </PaginationItem>
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={e => {
+                      e.preventDefault()
+                      if (canNext) goToPage(pageIndex + 1)
+                    }}
+                    className={!canNext ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            )
+          })()}
+        </Pagination>
+      )}
     </div>
   )
 }

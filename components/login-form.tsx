@@ -57,8 +57,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="py-8">
         <CardHeader>
-          <CardTitle>教育管理系统</CardTitle>
-          <p className="text-sm text-muted-foreground">培训机构内部管理平台</p>
+          <CardTitle>艺海之源艺术培训</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>

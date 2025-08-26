@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { toast } from "sonner"
 
 interface ApiResponse<T> {
   success: boolean
@@ -27,39 +28,58 @@ export function useApi<T>(endpoint: string, options: UseApiOptions = {}) {
 
   const { page = 1, limit = 10, search = "", enabled = true } = options
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!enabled) return
 
-    const fetchData = async () => {
-      setLoading(true)
-      setError(null)
+    setLoading(true)
+    setError(null)
 
-      try {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: limit.toString(),
-          ...(search && { search }),
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(search && { search }),
+      })
+
+      const response = await fetch(`${endpoint}?${params}`)
+      const result: ApiResponse<T[]> = await response.json()
+
+      if (response.ok && result.success) {
+        setData(result.data)
+        setTotal(result.total || 0)
+        setTotalPages(result.totalPages || 0)
+      } else {
+        const message = result.error || "获取数据失败"
+        setError(message)
+        toast.error(message, {
+          action: {
+            label: "重试",
+            onClick: () => {
+              // 立即重试
+              fetchData()
+            },
+          },
         })
-
-        const response = await fetch(`${endpoint}?${params}`)
-        const result: ApiResponse<T[]> = await response.json()
-
-        if (response.ok && result.success) {
-          setData(result.data)
-          setTotal(result.total || 0)
-          setTotalPages(result.totalPages || 0)
-        } else {
-          setError(result.error || "获取数据失败")
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "网络错误")
-      } finally {
-        setLoading(false)
       }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "网络错误"
+      setError(message)
+      toast.error(message, {
+        action: {
+          label: "重试",
+          onClick: () => {
+            fetchData()
+          },
+        },
+      })
+    } finally {
+      setLoading(false)
     }
-
-    fetchData()
   }, [endpoint, page, limit, search, enabled])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   return {
     data,
@@ -67,5 +87,6 @@ export function useApi<T>(endpoint: string, options: UseApiOptions = {}) {
     error,
     total,
     totalPages,
+    refetch: fetchData,
   }
 }

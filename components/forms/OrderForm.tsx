@@ -59,7 +59,8 @@ export function OrderForm({ id, mode, initialData }: OrderFormProps) {
       // 从 API 获取数据
       fetchOrderData(id)
     }
-  }, [id, mode, initialData, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, mode, initialData])
 
   const fetchOrderData = async (orderId: string | number) => {
     try {
@@ -70,7 +71,7 @@ export function OrderForm({ id, mode, initialData }: OrderFormProps) {
       } else {
         throw new Error(result.error)
       }
-    } catch (error) {
+    } catch {
       toast.error("获取数据失败，请稍后重试")
     }
   }
@@ -81,6 +82,7 @@ export function OrderForm({ id, mode, initialData }: OrderFormProps) {
     if (watchCourseId && mode === "create") {
       fetchCoursePrice(watchCourseId)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchCourseId, mode])
 
   const fetchCoursePrice = async (courseId: number) => {

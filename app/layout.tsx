@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Providers } from "@/components/providers"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "教育管理系统",
-  description: "一个现代化的教育管理平台",
+  title: "艺海之源艺术培训",
+  description: "一个现代化的艺术培训管理平台",
 }
 
 export default function RootLayout({
@@ -30,6 +31,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
+        <Toaster />
       </body>
     </html>
   )

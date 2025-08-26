@@ -72,7 +72,8 @@ export function CourseForm({ id, mode, initialData }: CourseFormProps) {
       // 从 API 获取数据
       fetchCourseData(id)
     }
-  }, [id, mode, initialData, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, mode, initialData])
 
   const fetchCourseData = async (courseId: string | number) => {
     try {
@@ -83,7 +84,7 @@ export function CourseForm({ id, mode, initialData }: CourseFormProps) {
       } else {
         throw new Error(result.error)
       }
-    } catch (error) {
+    } catch {
       toast.error("获取数据失败，请稍后重试")
     }
   }
