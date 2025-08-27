@@ -235,6 +235,7 @@ export default function CoursesPage() {
                   <Card
                     key={c.id}
                     className="overflow-hidden py-0 border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    onClick={() => (window.location.href = `/courses/${c.id}`)}
                   >
                     <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
                       {/* 课程编号 */}

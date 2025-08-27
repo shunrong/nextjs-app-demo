@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form } from "@/components/ui/form"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { toast } from "sonner"
 import {
   TextField,
@@ -15,10 +16,11 @@ import {
   NumberField,
   AsyncSelectField,
 } from "@/components/forms/FormField"
-import { LessonManager } from "@/components/forms/LessonManager"
+import { LessonForm } from "@/components/forms/LessonForm"
 import { StudentList } from "@/components/forms/StudentList"
 import { courseSchema, type CourseFormData } from "@/lib/schemas/course"
 import { FORM_CONFIGS, type FormMode } from "@/types/form"
+import { ChevronDown, ChevronRight, BookOpen, GraduationCap } from "lucide-react"
 
 interface CourseFormProps {
   id?: string | number
@@ -28,6 +30,10 @@ interface CourseFormProps {
 export function CourseForm({ id, mode }: CourseFormProps) {
   const router = useRouter()
   const config = FORM_CONFIGS[mode]
+
+  // 各个卡片的展开状态
+  const [basicInfoOpen, setBasicInfoOpen] = useState(true)
+  const [teacherConfigOpen, setTeacherConfigOpen] = useState(true)
 
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -164,7 +170,6 @@ export function CourseForm({ id, mode }: CourseFormProps) {
   ]
 
   const { students } = form.getValues()
-  console.log({ students, mode }, "initialData")
 
   return (
     <div className="space-y-6">
@@ -193,106 +198,136 @@ export function CourseForm({ id, mode }: CourseFormProps) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* 基本信息 */}
           <Card>
-            <CardHeader>
-              <CardTitle>基本信息</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <TextField
-                  form={form}
-                  name="title"
-                  label="课程标题"
-                  placeholder="请输入课程标题"
-                  required
-                  disabled={config.readonly}
-                />
-              </div>
+            <Collapsible open={basicInfoOpen} onOpenChange={setBasicInfoOpen}>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="flex items-center gap-2">
+                    {basicInfoOpen ? (
+                      <ChevronDown className="size-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="size-4 text-muted-foreground" />
+                    )}
+                    <BookOpen className="size-5" />
+                    基本信息
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
 
-              <div className="md:col-span-2">
-                <TextareaField
-                  form={form}
-                  name="subtitle"
-                  label="课程副标题"
-                  placeholder="请输入课程副标题"
-                  rows={3}
-                  disabled={config.readonly}
-                />
-              </div>
+              <CollapsibleContent>
+                <CardContent className="grid gap-4 md:grid-cols-2">
+                  <div className="md:col-span-2">
+                    <TextField
+                      form={form}
+                      name="title"
+                      label="课程标题"
+                      placeholder="请输入课程标题"
+                      required
+                      disabled={config.readonly}
+                    />
+                  </div>
 
-              <SelectField
-                form={form}
-                name="category"
-                label="课程分类"
-                placeholder="请选择课程分类"
-                options={categoryOptions}
-                required
-                disabled={config.readonly}
-              />
+                  <div className="md:col-span-2">
+                    <TextareaField
+                      form={form}
+                      name="subtitle"
+                      label="课程副标题"
+                      placeholder="请输入课程副标题"
+                      rows={3}
+                      disabled={config.readonly}
+                    />
+                  </div>
 
-              <NumberField
-                form={form}
-                name="price"
-                label="课程价格"
-                placeholder="请输入课程价格"
-                min={0}
-                step={0.01}
-                required
-                disabled={config.readonly}
-              />
+                  <SelectField
+                    form={form}
+                    name="category"
+                    label="课程分类"
+                    placeholder="请选择课程分类"
+                    options={categoryOptions}
+                    required
+                    disabled={config.readonly}
+                  />
 
-              <NumberField
-                form={form}
-                name="year"
-                label="开课年份"
-                placeholder="请输入开课年份"
-                min={2020}
-                max={2030}
-                required
-                disabled={config.readonly}
-              />
+                  <NumberField
+                    form={form}
+                    name="price"
+                    label="课程价格"
+                    placeholder="请输入课程价格"
+                    min={0}
+                    step={0.01}
+                    required
+                    disabled={config.readonly}
+                  />
 
-              <SelectField
-                form={form}
-                name="term"
-                label="开课学期"
-                placeholder="请选择开课学期"
-                options={termOptions}
-                required
-                disabled={config.readonly}
-              />
+                  <NumberField
+                    form={form}
+                    name="year"
+                    label="开课年份"
+                    placeholder="请输入开课年份"
+                    min={2020}
+                    max={2030}
+                    required
+                    disabled={config.readonly}
+                  />
 
-              <div className="md:col-span-2">
-                <TextField
-                  form={form}
-                  name="address"
-                  label="上课地点"
-                  placeholder="请输入上课地点"
-                  disabled={config.readonly}
-                />
-              </div>
-            </CardContent>
+                  <SelectField
+                    form={form}
+                    name="term"
+                    label="开课学期"
+                    placeholder="请选择开课学期"
+                    options={termOptions}
+                    required
+                    disabled={config.readonly}
+                  />
+
+                  <div className="md:col-span-2">
+                    <TextField
+                      form={form}
+                      name="address"
+                      label="上课地点"
+                      placeholder="请输入上课地点"
+                      disabled={config.readonly}
+                    />
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
 
           {/* 师资配置 */}
           <Card>
-            <CardHeader>
-              <CardTitle>师资配置</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <AsyncSelectField
-                form={form}
-                name="teacherId"
-                label="授课教师"
-                placeholder="请选择授课教师"
-                apiEndpoint="/api/options?type=teachers"
-                required
-                disabled={config.readonly}
-              />
-            </CardContent>
+            <Collapsible open={teacherConfigOpen} onOpenChange={setTeacherConfigOpen}>
+              <CollapsibleTrigger asChild>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    {teacherConfigOpen ? (
+                      <ChevronDown className="size-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="size-4 text-muted-foreground" />
+                    )}
+                    <GraduationCap className="size-5" />
+                    师资配置
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+
+              <CollapsibleContent>
+                <CardContent className="grid gap-4 md:grid-cols-2">
+                  <AsyncSelectField
+                    form={form}
+                    name="teacherId"
+                    label="授课教师"
+                    placeholder="请选择授课教师"
+                    apiEndpoint="/api/options?type=teachers"
+                    required
+                    disabled={config.readonly}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
 
           {/* 课时管理 */}
-          <LessonManager disabled={config.readonly} />
+          <LessonForm disabled={config.readonly} />
 
           {/* 报名管理 - 仅在查看模式下显示 */}
           {mode === "view" && students && <StudentList students={students} />}

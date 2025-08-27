@@ -186,6 +186,7 @@ export default function TeachersPage() {
                   <Card
                     key={t.id}
                     className="overflow-hidden border-0 py-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    onClick={() => (window.location.href = `/teachers/${t.id}`)}
                   >
                     <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
                       {/* 教师编号 */}

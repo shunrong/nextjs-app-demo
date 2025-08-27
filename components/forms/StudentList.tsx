@@ -1,8 +1,18 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, User, Phone, Mail, Calendar, CreditCard } from "lucide-react"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Users, ChevronDown, ChevronRight } from "lucide-react"
 
 interface Student {
   id: number
@@ -40,6 +50,8 @@ function formatCurrency(amount: number) {
 }
 
 export function StudentList({ students }: StudentListProps) {
+  const [isOpen, setIsOpen] = useState(true)
+
   const getStatusBadge = (status: string) => {
     return status === "REGISTERED" ? (
       <Badge variant="default" className="bg-green-500">
@@ -56,82 +68,79 @@ export function StudentList({ students }: StudentListProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="size-5" />
-          报名学生 ({students.length}人)
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {students.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Users className="size-12 mx-auto mb-2 opacity-50" />
-            <p>暂无报名学生</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {students.map(student => (
-              <Card key={student.orderId} className="border">
-                <CardContent className="pt-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 rounded-full p-2">
-                        <User className="size-4 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{student.name}</h4>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1">
-                            <Phone className="size-3" />
-                            {student.phone}
-                          </span>
-                          {student.email && (
-                            <span className="flex items-center gap-1">
-                              <Mail className="size-3" />
-                              {student.email}
-                            </span>
-                          )}
-                          <span>{getGenderText(student.gender)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    {getStatusBadge(student.status)}
-                  </div>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer">
+            <CardTitle className="flex items-center gap-2">
+              {isOpen ? (
+                <ChevronDown className="size-4 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="size-4 text-muted-foreground" />
+              )}
+              <Users className="size-5" />
+              报名学生 ({students.length}人)
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
 
-                  <div className="grid gap-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">订单号：</span>
-                      <span className="font-mono">{student.orderNo}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">报名金额：</span>
-                      <span className="font-medium text-primary">
-                        {formatCurrency(student.amount)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">报名时间：</span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="size-3" />
-                        {formatDate(student.createdAt)}
-                      </span>
-                    </div>
-                    {student.payTime && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">支付时间：</span>
-                        <span className="flex items-center gap-1">
-                          <CreditCard className="size-3" />
-                          {formatDate(student.payTime)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </CardContent>
+        <CollapsibleContent>
+          <CardContent>
+            {students.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="size-12 mx-auto mb-2 opacity-50" />
+                <p>暂无报名学生</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>学生姓名</TableHead>
+                      <TableHead className="min-w-[120px]">手机号</TableHead>
+                      <TableHead className="w-16">性别</TableHead>
+                      <TableHead className="min-w-[140px]">订单号</TableHead>
+                      <TableHead className="w-20">状态</TableHead>
+                      <TableHead className="w-24">金额</TableHead>
+                      <TableHead className="min-w-[140px]">支付时间</TableHead>
+                      <TableHead className="min-w-[140px]">备注</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {students.map(student => (
+                      <TableRow key={student.orderId}>
+                        <TableCell className="font-medium">{student.name}</TableCell>
+
+                        <TableCell>{student.phone}</TableCell>
+
+                        <TableCell>
+                          <span className="text-sm">{getGenderText(student.gender)}</span>
+                        </TableCell>
+
+                        <TableCell>
+                          <span className="font-mono text-xs">{student.orderNo}</span>
+                        </TableCell>
+
+                        <TableCell>{getStatusBadge(student.status)}</TableCell>
+
+                        <TableCell>
+                          <span className="font-medium text-primary">
+                            {formatCurrency(student.amount)}
+                          </span>
+                        </TableCell>
+
+                        <TableCell>
+                          <span className="text-sm">{formatDate(student.createdAt)}</span>
+                        </TableCell>
+                        <TableCell>-</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   )
 }
