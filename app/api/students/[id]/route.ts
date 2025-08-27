@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { Role } from "@/lib/enums"
 
 // 获取单个学生详情
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const student = await prisma.user.findFirst({
       where: {
         id: studentId,
-        role: "STUDENT",
+        role: Role.STUDENT,
       },
       include: {
         student: true,
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       id: student.id,
       name: student.name || "",
       phone: student.phone || "",
-      email: student.email || "",
+      // email: student.email || "", // 数据库中没有email字段
       gender: student.gender,
       birth: student.student?.birth ? student.student.birth.toISOString().split("T")[0] : "",
       parentName1: student.student?.parentName1 || "",
@@ -81,7 +82,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const {
       name,
       phone,
-      email,
       gender,
       birth,
       parentName1,
@@ -121,7 +121,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       data: {
         name,
         phone,
-        email: email || null,
         gender: gender || null,
         student: {
           update: {
@@ -182,7 +181,7 @@ export async function DELETE(
     const student = await prisma.user.findFirst({
       where: {
         id: studentId,
-        role: "STUDENT",
+        role: Role.STUDENT,
       },
     })
 

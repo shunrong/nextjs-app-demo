@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { TextField, SelectField, DateField, RadioField } from "@/components/forms/FormField"
 import { studentSchema, type StudentFormData } from "@/lib/schemas/student"
 import { FORM_CONFIGS, type FormMode } from "@/types/form"
+import { Gender, genderLabels, parentRoleLabels } from "@/lib/enums"
 
 interface StudentFormProps {
   id?: string | number
@@ -27,8 +28,7 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
     defaultValues: {
       name: "",
       phone: "",
-      email: "",
-      gender: null,
+      gender: Gender.MALE,
       birth: "",
       parentName1: "",
       parentPhone1: "",
@@ -47,8 +47,7 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
       form.reset({
         name: "",
         phone: "",
-        email: "",
-        gender: null,
+        gender: Gender.MALE,
         birth: "",
         parentName1: "",
         parentPhone1: "",
@@ -132,23 +131,6 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
     }
   }
 
-  // 性别选项
-  const genderOptions = [
-    { label: "男", value: "MALE" },
-    { label: "女", value: "FEMALE" },
-  ]
-
-  // 关系选项
-  const relationOptions = [
-    { label: "父亲", value: "父亲" },
-    { label: "母亲", value: "母亲" },
-    { label: "祖父", value: "祖父" },
-    { label: "祖母", value: "祖母" },
-    { label: "外祖父", value: "外祖父" },
-    { label: "外祖母", value: "外祖母" },
-    { label: "其他", value: "其他" },
-  ]
-
   return (
     <div className="space-y-6">
       {/* 页面头部 */}
@@ -199,15 +181,6 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
                 disabled={config.readonly}
               />
 
-              <TextField
-                form={form}
-                name="email"
-                label="邮箱"
-                type="email"
-                placeholder="请输入邮箱地址"
-                disabled={config.readonly}
-              />
-
               <DateField form={form} name="birth" label="出生日期" disabled={config.readonly} />
 
               <div className="md:col-span-2">
@@ -215,7 +188,10 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
                   form={form}
                   name="gender"
                   label="性别"
-                  options={genderOptions}
+                  options={Object.entries(genderLabels).map(([value, label]) => ({
+                    label,
+                    value,
+                  }))}
                   disabled={config.readonly}
                 />
               </div>
@@ -254,7 +230,10 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
                   name="parentRole1"
                   label="与学生关系"
                   placeholder="请选择关系"
-                  options={relationOptions}
+                  options={Object.entries(parentRoleLabels).map(([value, label]) => ({
+                    label,
+                    value,
+                  }))}
                   required
                   disabled={config.readonly}
                 />
@@ -284,7 +263,10 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
                   name="parentRole2"
                   label="与学生关系（备选）"
                   placeholder="请选择关系"
-                  options={relationOptions}
+                  options={Object.entries(parentRoleLabels).map(([value, label]) => ({
+                    label,
+                    value,
+                  }))}
                   disabled={config.readonly}
                 />
               </div>

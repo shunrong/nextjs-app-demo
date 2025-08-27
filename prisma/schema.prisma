@@ -10,41 +10,36 @@ datasource db {
 // 用户主表
 model User {
   id        Int      @id @default(autoincrement())
-  phone     String   @unique // 注册手机号
-  name      String? // 姓名
-  nick      String? // 昵称
-  email     String? // 邮箱（NextAuth需要，可选）
-  password  String // 密码
-  gender    Gender? // 性别
-  avatar    String? // 头像
-  role      Role // 角色：学生，老师，老板
+  phone     String   @unique // 手机号唯一，确保一个手机号一个账号
+  name      String
+  nick      String?
+  password  String
+  gender    Int      @default(1) // 1=MALE, 2=FEMALE
+  avatar    String?
+  role      Int      @default(1) // 1=STUDENT, 2=TEACHER, 3=BOSS
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // 角色关联字段（只有对应角色才有值）
-  studentId Int? @unique
-  teacherId Int? @unique
-  bossId    Int? @unique
-
   // 业务关联
-  socials        Social[]
   student        Student?
   teacher        Teacher?
   boss           Boss?
-  orders         Order[] // 作为学生的订单
-  teachedCourses Course[] // 作为教师的课程
-  leaves         Leave[] // 请假记录
+  socials        Social[] // 社交账号绑定
+  studentOrders  Order[] // 作为学生的订单
+  teacherCourses Course[] // 作为教师的课程
+  studentleaves  Leave[] // 作为学生的请假记录
 
   @@index([role])
   @@index([phone])
+  @@index([name])
 }
 
 // 社交账号绑定表
 model Social {
   id       Int    @id @default(autoincrement())
   userId   Int
-  openId   String // 社交平台账号ID
-  platform String // 平台：微信，QQ等
+  openId   String
+  platform String
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -56,14 +51,14 @@ model Social {
 model Student {
   id           Int       @id @default(autoincrement())
   userId       Int       @unique
-  birth        DateTime? // 出生年月
-  photo        String? // 形象照
-  parentPhone1 String? // 监护人电话1
-  parentName1  String? // 监护人姓名1
-  parentRole1  String? // 监护人与本人关系1
-  parentPhone2 String? // 监护人电话2
-  parentName2  String? // 监护人姓名2
-  parentRole2  String? // 监护人与本人关系2
+  birth        DateTime?
+  photo        String?
+  parentPhone1 String
+  parentName1  String
+  parentRole1  Int       @default(1)
+  parentPhone2 String?
+  parentName2  String?
+  parentRole2  Int?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -74,7 +69,7 @@ model Student {
 model Teacher {
   id        Int      @id @default(autoincrement())
   userId    Int      @unique
-  position  String? // 职位：主课还是助教
+  job       Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -91,21 +86,21 @@ model Boss {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// 课程表（商品表）
+// 课程表
 model Course {
-  id        Int          @id @default(autoincrement())
-  title     String // 课程标题
-  subtitle  String? // 课程副标题描述
-  category  String // 课程专业：中国舞，拉丁舞，绘画，书法，口才
-  teacherId Int // 主课老师ID
-  banner    String? // 封面图
-  year      Int // 课程开设年份
-  term      CourseTerm // 课程学期：春季，暑期，秋季
-  status    CourseStatus @default(DRAFT) // 状态：待上架，开课中，已结课，已归档
-  price     Int // 价格（分）
-  address   String? // 上课地点
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id        Int      @id @default(autoincrement())
+  title     String
+  subtitle  String?
+  category  Int      @default(1) //
+  teacherId Int
+  banner    String?
+  year      Int      @default(2025)
+  term      Int      @default(1)
+  status    Int      @default(1)
+  address   String
+  price     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   teacher User     @relation(fields: [teacherId], references: [id])
   lessons Lesson[]
@@ -119,15 +114,15 @@ model Course {
 
 // 课时表
 model Lesson {
-  id        Int          @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   courseId  Int
-  title     String // 课时标题
-  subtitle  String? // 课时副标题描述
-  startTime DateTime // 课时开始时间
-  endTime   DateTime // 课时结束时间
-  status    LessonStatus @default(PENDING) // 状态：未开始，已完成
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  title     String
+  subtitle  String?
+  startTime DateTime @default(now())
+  endTime   DateTime @default(now())
+  status    Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   leaves Leave[]
@@ -137,76 +132,36 @@ model Lesson {
   @@index([status])
 }
 
-// 订单表（报名记录表）
+// 订单表
 model Order {
-  id        Int         @id @default(autoincrement())
-  orderNo   String      @unique // 订单号：OD20240301001
-  studentId Int // 学生ID
-  courseId  Int // 课程ID
-  status    OrderStatus @default(REGISTERED) // 状态：已登记，已完成
-  payTime   DateTime? // 支付时间（微信转账时间）
-  amount    Int // 付款金额（分）0表示免费
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id        Int       @id @default(autoincrement())
+  studentId Int
+  courseId  Int
+  status    Int       @default(1)
+  payTime   DateTime?
+  amount    Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   student User   @relation(fields: [studentId], references: [id])
   course  Course @relation(fields: [courseId], references: [id])
 
   @@index([studentId])
   @@index([courseId])
-  @@index([status])
-  @@index([createdAt])
-  @@index([orderNo])
 }
 
 // 请假记录表
 model Leave {
   id        Int      @id @default(autoincrement())
-  studentId Int // 学生ID
-  lessonId  Int // 课时ID
-  reason    String? // 请假原因
+  studentId Int
+  lessonId  Int
+  reason    String?
   createdAt DateTime @default(now())
 
   student User   @relation(fields: [studentId], references: [id])
   lesson  Lesson @relation(fields: [lessonId], references: [id])
 
-  @@unique([studentId, lessonId]) // 同一学生同一课时只能请假一次
+  @@unique([studentId, lessonId])
   @@index([studentId])
   @@index([lessonId])
-}
-
-// 枚举类型
-enum Role {
-  STUDENT // 学生
-  TEACHER // 老师
-  BOSS // 老板
-}
-
-enum Gender {
-  MALE // 男
-  FEMALE // 女
-}
-
-enum CourseStatus {
-  DRAFT // 待上架
-  PUBLISHED // 开课中
-  COMPLETED // 已结课
-  ARCHIVED // 已归档
-}
-
-enum LessonStatus {
-  PENDING // 未开始
-  COMPLETED // 已完成
-}
-
-enum CourseTerm {
-  SPRING // 春季
-  SUMMER // 暑期
-  AUTUMN // 秋季
-  WINTER // 冬季
-}
-
-enum OrderStatus {
-  REGISTERED // 已登记
-  CANCELLED // 已取消
 }

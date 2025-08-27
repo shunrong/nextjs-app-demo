@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { orderSchema } from "@/lib/schemas/order"
+import { Role } from "@/lib/enums"
 
 // 获取单个订单详情
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,10 +34,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // 格式化数据以匹配表单结构
     const formattedOrder = {
       id: order.id,
+      displayCode: `OD${String(order.id).padStart(6, "0")}`,
       studentId: order.studentId,
       courseId: order.courseId,
       amount: order.amount,
-      orderNo: order.orderNo,
       status: order.status,
       payTime: order.payTime ? order.payTime.toISOString().split("T")[0] : "",
     }
@@ -60,7 +61,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // 检查权限：只有教师和老板可以更新订单信息
-    if (session.user.role !== "TEACHER" && session.user.role !== "BOSS") {
+    const userRole = parseInt(session.user.role)
+    if (userRole !== Role.TEACHER && userRole !== Role.BOSS) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
@@ -78,7 +80,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // 检查学生是否存在
     const student = await prisma.user.findFirst({
-      where: { id: studentId, role: "STUDENT" },
+      where: { id: studentId, role: Role.STUDENT },
     })
     if (!student) {
       return NextResponse.json({ error: "学生不存在" }, { status: 400 })
@@ -109,7 +111,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       message: "订单信息已更新",
       data: {
         id: updatedOrder.id,
-        orderNo: updatedOrder.orderNo,
       },
     })
   } catch (error) {
@@ -133,7 +134,8 @@ export async function DELETE(
     }
 
     // 检查权限：只有老板可以删除订单
-    if (session.user.role !== "BOSS") {
+    const userRole = parseInt(session.user.role)
+    if (userRole !== Role.BOSS) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 

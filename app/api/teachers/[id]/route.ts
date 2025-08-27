@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { Role } from "@/lib/enums"
 
 // 获取单个教师详情
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const teacher = await prisma.user.findFirst({
       where: {
         id: teacherId,
-        role: "TEACHER",
+        role: Role.TEACHER,
       },
       include: {
         teacher: true,
@@ -36,9 +37,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       id: teacher.id,
       name: teacher.name || "",
       phone: teacher.phone || "",
-      email: teacher.email || "",
       gender: teacher.gender,
-      position: teacher.teacher?.position || "",
+      job: teacher.teacher?.job || "",
       avatar: teacher.avatar || "",
     }
 
@@ -72,13 +72,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json()
-    const { name, phone, email, gender, position, avatar } = body
+    const { name, phone, gender, job, avatar } = body
 
     // 验证必填字段
-    if (!name || !phone || !position) {
+    if (!name || !phone || !job) {
       return NextResponse.json(
         {
-          error: "姓名、手机号和职位为必填项",
+          error: "姓名、手机号和职务为必填项",
         },
         { status: 400 }
       )
@@ -102,12 +102,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       data: {
         name,
         phone,
-        email: email || null,
         gender: gender || null,
         avatar: avatar || null,
         teacher: {
           update: {
-            position,
+            job,
           },
         },
       },
@@ -157,7 +156,7 @@ export async function DELETE(
     const teacher = await prisma.user.findFirst({
       where: {
         id: teacherId,
-        role: "TEACHER",
+        role: Role.TEACHER,
       },
     })
 

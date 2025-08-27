@@ -10,6 +10,7 @@ import { useApi } from "@/hooks/use-api"
 import { LayoutGrid, Table as TableIcon, UserCheck, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Gender, genderLabels } from "@/lib/enums"
 import {
   Pagination,
   PaginationContent,
@@ -34,9 +35,8 @@ interface Teacher {
   id: number
   displayCode: string
   name: string
-  email?: string | null
   phone: string
-  gender?: "MALE" | "FEMALE" | null
+  gender: Gender
   avatar?: string | null
   position: string
   courseCount: number
@@ -122,8 +122,8 @@ export default function TeachersPage() {
                 header: "性别",
                 accessorKey: "gender",
                 cell: ({ getValue }) => {
-                  const gender = getValue() as "MALE" | "FEMALE" | null
-                  return gender === "MALE" ? "男" : gender === "FEMALE" ? "女" : "-"
+                  const gender = getValue() as Gender | null
+                  return gender ? genderLabels[gender] : "-"
                 },
               },
               { header: "职位", accessorKey: "position" },
@@ -210,11 +210,8 @@ export default function TeachersPage() {
                       <div className="mt-8">
                         <h3 className="text-xl font-bold mb-2">{t.name}</h3>
                         <p className="text-white/90 text-sm">
-                          {t.position} ·{" "}
-                          {t.gender === "MALE" ? "男" : t.gender === "FEMALE" ? "女" : ""} ·{" "}
-                          {t.phone}
+                          {genderLabels[t.gender]} · {t.phone}
                         </p>
-                        {t.email && <p className="text-white/80 text-xs mt-1">{t.email}</p>}
                       </div>
                     </div>
 

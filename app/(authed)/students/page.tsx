@@ -11,6 +11,7 @@ import { useApi } from "@/hooks/use-api"
 import { LayoutGrid, Table as TableIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Gender, genderLabels } from "@/lib/enums"
 import {
   Pagination,
   PaginationContent,
@@ -35,17 +36,14 @@ interface Student {
   id: number
   displayCode: string
   name: string
-  email: string | null
   phone: string
-  gender: "MALE" | "FEMALE" | null
-  birth?: string | null
-  photo?: string | null
-  parentName1?: string | null
-  parentPhone1?: string | null
-  parentRole1?: string | null
-  parentName2?: string | null
-  parentPhone2?: string | null
-  parentRole2?: string | null
+  gender: Gender
+  parentName1: string
+  parentPhone1: string
+  parentRole1: string
+  parentName2: string
+  parentPhone2: string
+  parentRole2: string
   enrolledCourses: number
   joinedAt: string
 }
@@ -244,8 +242,7 @@ export default function StudentsPage() {
                             <div className="mt-8">
                               <h3 className="text-xl font-bold mb-2">{s.name}</h3>
                               <p className="text-white/90 text-sm">
-                                {s.gender === "MALE" ? "男" : s.gender === "FEMALE" ? "女" : ""} ·{" "}
-                                {s.phone}
+                                {genderLabels[s.gender]} · {s.phone}
                               </p>
                               {s.parentName1 && (
                                 <p className="text-white/80 text-xs mt-1">
@@ -262,7 +259,6 @@ export default function StudentsPage() {
                                 {/* <BookOpen className="size-4" /> */}
                                 选课 {s.enrolledCourses} 门
                               </span>
-                              {s.email && <span className="text-xs">{s.email}</span>}
                             </div>
 
                             <div className="text-xs text-muted-foreground">

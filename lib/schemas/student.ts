@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { Gender } from "@/lib/enums"
 
 export const studentSchema = z.object({
   name: z.string().min(1, "姓名不能为空").min(2, "姓名至少2个字符").max(20, "姓名不能超过20个字符"),
@@ -10,7 +11,7 @@ export const studentSchema = z.object({
 
   email: z.string().email("请输入正确的邮箱地址").optional().or(z.literal("")),
 
-  gender: z.enum(["MALE", "FEMALE"]).nullable().optional(),
+  gender: z.nativeEnum(Gender).nullable().optional(),
 
   birth: z
     .string()

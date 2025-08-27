@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { TextField, SelectField, RadioField } from "@/components/forms/FormField"
 import { teacherSchema, type TeacherFormData } from "@/lib/schemas/teacher"
 import { FORM_CONFIGS, type FormMode } from "@/types/form"
+import { Gender, genderLabels, Job, jobLabels } from "@/lib/enums"
 
 interface TeacherFormProps {
   id?: string | number
@@ -27,9 +28,8 @@ export function TeacherForm({ id, mode, initialData }: TeacherFormProps) {
     defaultValues: {
       name: "",
       phone: "",
-      email: "",
-      gender: null,
-      position: "",
+      gender: Gender.MALE,
+      job: Job.TEACHER,
       avatar: "",
     },
   })
@@ -41,9 +41,8 @@ export function TeacherForm({ id, mode, initialData }: TeacherFormProps) {
       form.reset({
         name: "",
         phone: "",
-        email: "",
-        gender: null,
-        position: "",
+        gender: Gender.MALE,
+        job: Job.TEACHER,
         avatar: "",
       })
     } else if (initialData) {
@@ -110,18 +109,6 @@ export function TeacherForm({ id, mode, initialData }: TeacherFormProps) {
     }
   }
 
-  // 性别选项
-  const genderOptions = [
-    { label: "男", value: "MALE" },
-    { label: "女", value: "FEMALE" },
-  ]
-
-  // 职位选项
-  const positionOptions = [
-    { label: "主课", value: "主课" },
-    { label: "助教", value: "助教" },
-  ]
-
   return (
     <div className="space-y-6">
       {/* 页面头部 */}
@@ -167,21 +154,15 @@ export function TeacherForm({ id, mode, initialData }: TeacherFormProps) {
                 disabled={config.readonly}
               />
 
-              <TextField
-                form={form}
-                name="email"
-                label="邮箱"
-                type="email"
-                placeholder="请输入邮箱地址"
-                disabled={config.readonly}
-              />
-
               <SelectField
                 form={form}
-                name="position"
+                name="job"
                 label="职位"
                 placeholder="请选择职位"
-                options={positionOptions}
+                options={Object.entries(jobLabels).map(([value, label]) => ({
+                  label,
+                  value,
+                }))}
                 required
                 disabled={config.readonly}
               />
@@ -191,7 +172,10 @@ export function TeacherForm({ id, mode, initialData }: TeacherFormProps) {
                   form={form}
                   name="gender"
                   label="性别"
-                  options={genderOptions}
+                  options={Object.entries(genderLabels).map(([value, label]) => ({
+                    label,
+                    value,
+                  }))}
                   disabled={config.readonly}
                 />
               </div>

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { LessonStatus } from "@/lib/enums"
 
 export const lessonSchema = z.object({
   id: z.number().optional(),
@@ -7,7 +8,7 @@ export const lessonSchema = z.object({
   subtitle: z.string().optional(),
   startTime: z.string().min(1, "请选择开始时间"),
   endTime: z.string().min(1, "请选择结束时间"),
-  status: z.enum(["PENDING", "COMPLETED"]).default("PENDING"),
+  status: z.nativeEnum(LessonStatus).default(LessonStatus.PENDING),
 })
 
 // 推导出 TypeScript 类型

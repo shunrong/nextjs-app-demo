@@ -19,10 +19,7 @@ export const authOptions: NextAuthOptions = {
         // 支持手机号或邮箱登录
         const user = await prisma.user.findFirst({
           where: {
-            OR: [
-              { phone: credentials.phone },
-              { email: credentials.phone }, // 如果输入的是邮箱格式
-            ],
+            OR: [{ phone: credentials.phone }],
           },
           include: {
             student: true,
@@ -43,12 +40,10 @@ export const authOptions: NextAuthOptions = {
 
         return {
           id: user.id.toString(), // NextAuth 需要 string ID
-          email: user.email || user.phone, // 如果没有邮箱用手机号
           name: user.name,
-          image: user.avatar,
           // 自定义字段
           phone: user.phone,
-          role: user.role,
+          role: user.role.toString(),
           nick: user.nick,
         }
       },

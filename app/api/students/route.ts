@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { Role } from "@/lib/enums"
 
 // 获取学生列表
 export async function GET(request: NextRequest) {
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || ""
 
     const where = {
-      role: "STUDENT" as const,
+      role: Role.STUDENT,
       ...(search
         ? {
             OR: [
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
         include: {
           student: true, // 包含学生详细信息
           _count: {
-            select: { orders: true }, // 修改为 orders
+            select: { studentOrders: true }, // 统计报名订单数量
           },
         },
         skip: (page - 1) * limit,
@@ -50,7 +51,6 @@ export async function GET(request: NextRequest) {
       id: student.id,
       displayCode: `S${String(student.id).padStart(3, "0")}`, // 动态生成显示编码
       name: student.name,
-      email: student.email,
       phone: student.phone,
       gender: student.gender,
       // 学生特有信息
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       parentPhone2: student.student?.parentPhone2,
       parentRole2: student.student?.parentRole2,
       // 统计信息
-      enrolledCourses: student._count.orders,
+      enrolledCourses: student._count.studentOrders,
       joinedAt: student.createdAt,
     }))
 
@@ -89,7 +89,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查权限：只有老师和老板可以创建学生
-    if (!["TEACHER", "BOSS"].includes(session.user.role)) {
+    const userRole = parseInt(session.user.role)
+    if (![Role.TEACHER, Role.BOSS].includes(userRole)) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
@@ -97,7 +98,6 @@ export async function POST(request: NextRequest) {
     const {
       name,
       phone,
-      email,
       password = "123456", // 默认密码
       gender,
       birth,
@@ -131,10 +131,10 @@ export async function POST(request: NextRequest) {
       data: {
         phone,
         name,
-        email,
+        // email, // 数据库中没有email字段
         password: hashedPassword,
         gender,
-        role: "STUDENT",
+        role: Role.STUDENT,
         student: {
           create: {
             birth: birth ? new Date(birth) : null,
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     if (studentUser.student?.id) {
       await prisma.user.update({
         where: { id: studentUser.id },
-        data: { studentId: studentUser.student.id },
+        data: { student: { connect: { id: studentUser.student.id } } },
       })
     }
 
@@ -167,7 +167,6 @@ export async function POST(request: NextRequest) {
         displayCode: `S${String(studentUser.id).padStart(3, "0")}`,
         name: studentUser.name,
         phone: studentUser.phone,
-        email: studentUser.email,
       },
     })
   } catch (error) {

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { LessonStatus, CourseTerm, Gender, OrderStatus, CourseCategory } from "@/lib/enums"
 
 const lessonSchema = z.object({
   id: z.number().optional(),
@@ -6,18 +7,16 @@ const lessonSchema = z.object({
   subtitle: z.string().optional(),
   startTime: z.string().min(1, "请选择开始时间"),
   endTime: z.string().min(1, "请选择结束时间"),
-  status: z.enum(["PENDING", "COMPLETED"]),
+  status: z.enum(LessonStatus),
 })
 
 const studentSchema = z.object({
   id: z.number(),
   name: z.string(),
   phone: z.string(),
-  email: z.string().nullable(),
-  gender: z.enum(["MALE", "FEMALE"]).nullable(),
+  gender: z.enum(Gender, "请选择性别"),
   orderId: z.number(),
-  orderNo: z.string(),
-  status: z.enum(["REGISTERED", "CANCELLED"]),
+  status: z.enum(OrderStatus),
   amount: z.number(),
   payTime: z.string().nullable(),
   createdAt: z.string(),
@@ -32,11 +31,11 @@ export const courseSchema = z.object({
 
   subtitle: z.string().max(200, "课程副标题不能超过200个字符").optional(),
 
-  category: z.string().min(1, "请选择课程分类"),
+  category: z.enum(CourseCategory, "请选择课程分类"),
 
   year: z.number().min(2020, "年份不能早于2020年").max(2030, "年份不能晚于2030年"),
 
-  term: z.enum(["SPRING", "SUMMER", "AUTUMN", "WINTER"]),
+  term: z.enum(CourseTerm),
 
   price: z.number().min(0, "价格不能为负数").max(100000, "价格不能超过100000元"),
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { Role } from "@/lib/enums"
 
 // 获取教师列表
 export async function GET(request: NextRequest) {
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || ""
 
     const where = {
-      role: "TEACHER" as const,
+      role: Role.TEACHER,
       ...(search
         ? {
             OR: [
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
         include: {
           teacher: true, // 包含教师详细信息
           _count: {
-            select: { teachedCourses: true }, // 统计授课数量
+            select: { teacherCourses: true }, // 统计授课数量
           },
         },
         skip: (page - 1) * limit,
@@ -50,14 +51,13 @@ export async function GET(request: NextRequest) {
       id: teacher.id,
       displayCode: `T${String(teacher.id).padStart(3, "0")}`, // 动态生成显示编码
       name: teacher.name,
-      email: teacher.email,
       phone: teacher.phone,
       gender: teacher.gender,
       avatar: teacher.avatar,
       // 教师特有信息
-      position: teacher.teacher?.position || "主课",
+      job: teacher.teacher?.job || "主课",
       // 统计信息
-      courseCount: teacher._count.teachedCourses,
+      courseCount: teacher._count.teacherCourses,
       joinedAt: teacher.createdAt,
     }))
 
@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查权限：只有老板可以创建教师
-    if (session.user.role !== "BOSS") {
+    const userRole = parseInt(session.user.role)
+    if (userRole !== Role.BOSS) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
@@ -91,10 +92,9 @@ export async function POST(request: NextRequest) {
     const {
       name,
       phone,
-      email,
       password = "123456", // 默认密码
       gender,
-      position = "主课",
+      job = "主课",
     } = body
 
     // 验证必填字段
@@ -119,13 +119,12 @@ export async function POST(request: NextRequest) {
       data: {
         phone,
         name,
-        email,
         password: hashedPassword,
         gender,
-        role: "TEACHER",
+        role: Role.TEACHER,
         teacher: {
           create: {
-            position,
+            job,
           },
         },
       },
@@ -138,7 +137,7 @@ export async function POST(request: NextRequest) {
     if (teacherUser.teacher?.id) {
       await prisma.user.update({
         where: { id: teacherUser.id },
-        data: { teacherId: teacherUser.teacher.id },
+        data: { teacher: { connect: { id: teacherUser.teacher.id } } },
       })
     }
 
@@ -149,8 +148,7 @@ export async function POST(request: NextRequest) {
         displayCode: `T${String(teacherUser.id).padStart(3, "0")}`,
         name: teacherUser.name,
         phone: teacherUser.phone,
-        email: teacherUser.email,
-        position,
+        job,
       },
     })
   } catch (error) {

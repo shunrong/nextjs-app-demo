@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { courseSchema } from "@/lib/schemas/course"
+import { Role, LessonStatus, CourseCategory, CourseTerm } from "@/lib/enums"
 
 // 获取单个课程详情
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -32,7 +33,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
                 id: true,
                 name: true,
                 phone: true,
-                email: true,
                 gender: true,
               },
             },
@@ -72,10 +72,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         id: order.student.id,
         name: order.student.name,
         phone: order.student.phone,
-        email: order.student.email,
         gender: order.student.gender,
         orderId: order.id,
-        orderNo: order.orderNo,
         status: order.status,
         amount: order.amount,
         payTime: order.payTime,
@@ -102,7 +100,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // 检查权限：只有教师和老板可以更新课程信息
-    if (session.user.role !== "TEACHER" && session.user.role !== "BOSS") {
+    const userRole = parseInt(session.user.role)
+    if (userRole !== Role.TEACHER && userRole !== Role.BOSS) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
@@ -124,7 +123,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // 检查教师是否存在
     const teacher = await prisma.user.findFirst({
-      where: { id: teacherId, role: "TEACHER" },
+      where: { id: teacherId, role: Role.TEACHER },
     })
     if (!teacher) {
       return NextResponse.json({ error: "授课教师不存在" }, { status: 400 })
@@ -142,9 +141,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         data: {
           title,
           subtitle,
-          category,
+          category:
+            typeof category === "string"
+              ? CourseCategory[category as keyof typeof CourseCategory]
+              : category,
           year,
-          term,
+          term: typeof term === "string" ? CourseTerm[term as keyof typeof CourseTerm] : term,
           price,
           teacherId,
           address,
@@ -203,7 +205,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
             subtitle: lesson.subtitle,
             startTime: new Date(lesson.startTime),
             endTime: new Date(lesson.endTime),
-            status: lesson.status,
+            status:
+              typeof lesson.status === "string"
+                ? LessonStatus[lesson.status as keyof typeof LessonStatus]
+                : lesson.status,
           }
 
           // 验证时间逻辑
@@ -275,7 +280,8 @@ export async function DELETE(
     }
 
     // 检查权限：只有老板可以删除课程
-    if (session.user.role !== "BOSS") {
+    const userRole = parseInt(session.user.role)
+    if (userRole !== Role.BOSS) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 

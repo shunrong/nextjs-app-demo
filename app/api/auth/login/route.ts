@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 })
+    return NextResponse.json({ error: "手机号或密码错误" }, { status: 401 })
   } catch {
     return NextResponse.json({ error: "登录失败" }, { status: 500 })
   }

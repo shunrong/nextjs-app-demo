@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { CourseStatus, Role } from "@/lib/enums"
 
 // 获取课程列表
 export async function GET(request: NextRequest) {
@@ -20,7 +21,6 @@ export async function GET(request: NextRequest) {
       ? {
           OR: [
             { title: { contains: search, mode: "insensitive" as const } },
-            { category: { contains: search, mode: "insensitive" as const } },
             { teacher: { name: { contains: search, mode: "insensitive" as const } } },
           ],
         }
@@ -89,7 +89,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查权限：老师和老板可以添加课程
-    if (!["TEACHER", "BOSS"].includes(session.user.role)) {
+    const userRole = parseInt(session.user.role)
+    if (![Role.TEACHER, Role.BOSS].includes(userRole)) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
     const teacher = await prisma.user.findFirst({
       where: {
         id: teacherId,
-        role: "TEACHER",
+        role: Role.TEACHER,
       },
     })
 
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
         price: Math.round(price * 100), // 转换为分
         address,
         teacherId,
-        status: "DRAFT", // 默认草稿状态
+        status: CourseStatus.DRAFT, // 默认草稿状态
       },
       include: {
         teacher: { select: { name: true } },

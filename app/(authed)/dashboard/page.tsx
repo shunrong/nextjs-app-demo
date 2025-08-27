@@ -246,7 +246,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalTeachers}</div>
-            <div className="flex items-center text-xs text-blue-600">
+            <div className="flex items-center text-xs text-green-600">
               <Activity className="h-3 w-3 mr-1" />
               活跃教师
             </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { Role, CourseStatus, CourseTerm, courseTermLabels } from "@/lib/enums"
 
 // 获取下拉选项数据
 export async function GET(request: NextRequest) {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
       case "teachers":
         // 获取教师选项
         const teachers = await prisma.user.findMany({
-          where: { role: "TEACHER" },
+          where: { role: Role.TEACHER },
           select: {
             id: true,
             name: true,
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       case "students":
         // 获取学生选项
         const students = await prisma.user.findMany({
-          where: { role: "STUDENT" },
+          where: { role: Role.STUDENT },
           select: {
             id: true,
             name: true,
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
       case "courses":
         // 获取课程选项
         const courses = await prisma.course.findMany({
-          where: { status: "PUBLISHED" },
+          where: { status: CourseStatus.OPEN },
           select: {
             id: true,
             title: true,
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
         // 格式化课程名称
         const formattedCourses = courses.map(course => ({
           id: course.id,
-          name: `${course.title} (${course.year}年${course.term === "SPRING" ? "春季" : course.term === "SUMMER" ? "暑期" : course.term === "AUTUMN" ? "秋季" : "冬季"})`,
+          name: `${course.title} (${course.year}年${courseTermLabels[course.term as CourseTerm]})`,
         }))
         return NextResponse.json({
           success: true,

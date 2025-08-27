@@ -1,21 +1,32 @@
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
+import {
+  Role,
+  Gender,
+  Job,
+  ParentRole,
+  CourseStatus,
+  CourseCategory,
+  CourseTerm,
+  LessonStatus,
+  OrderStatus,
+} from "../lib/enums"
 
 const prisma = new PrismaClient()
 
 async function main() {
   console.log("🌱 开始种子数据...")
 
-  // 清理现有数据（注意顺序）
-  await prisma.leave.deleteMany()
-  await prisma.order.deleteMany()
-  await prisma.lesson.deleteMany()
-  await prisma.course.deleteMany()
-  await prisma.student.deleteMany()
-  await prisma.teacher.deleteMany()
-  await prisma.boss.deleteMany()
-  await prisma.social.deleteMany()
-  await prisma.user.deleteMany()
+  // ！！！危险操作：清理现有数据（注意顺序）
+  // await prisma.leave.deleteMany()
+  // await prisma.order.deleteMany()
+  // await prisma.lesson.deleteMany()
+  // await prisma.course.deleteMany()
+  // await prisma.student.deleteMany()
+  // await prisma.teacher.deleteMany()
+  // await prisma.boss.deleteMany()
+  // await prisma.social.deleteMany()
+  // await prisma.user.deleteMany()
 
   console.log("🗑️  清理完成")
 
@@ -28,19 +39,15 @@ async function main() {
       phone: "13800000001",
       name: "张老板",
       nick: "老板",
-      email: "boss@example.com",
       password: hashedPassword,
-      gender: "MALE",
-      role: "BOSS",
+      gender: Gender.MALE,
+      role: Role.BOSS,
       boss: {
         create: {},
       },
     },
     include: { boss: { select: { id: true } } },
   })
-  if (bossUser.boss?.id) {
-    await prisma.user.update({ where: { id: bossUser.id }, data: { bossId: bossUser.boss.id } })
-  }
 
   // 2) 教师
   const teacherUser1 = await prisma.user.create({
@@ -48,48 +55,34 @@ async function main() {
       phone: "13800000002",
       name: "李老师",
       nick: "舞蹈老师",
-      email: "teacher1@example.com",
       password: hashedPassword,
-      gender: "FEMALE",
-      role: "TEACHER",
+      gender: Gender.FEMALE,
+      role: Role.TEACHER,
       teacher: {
         create: {
-          position: "主课", // 职位：主课还是助教
+          job: Job.TEACHER, // 职位：主课
         },
       },
     },
     include: { teacher: { select: { id: true } } },
   })
-  if (teacherUser1.teacher?.id) {
-    await prisma.user.update({
-      where: { id: teacherUser1.id },
-      data: { teacherId: teacherUser1.teacher.id },
-    })
-  }
 
   const teacherUser2 = await prisma.user.create({
     data: {
       phone: "13800000003",
       name: "王老师",
       nick: "绘画老师",
-      email: "teacher2@example.com",
       password: hashedPassword,
-      gender: "FEMALE",
-      role: "TEACHER",
+      gender: Gender.FEMALE,
+      role: Role.TEACHER,
       teacher: {
         create: {
-          position: "主课",
+          job: Job.ASSISTANT, // 职位：助教
         },
       },
     },
     include: { teacher: { select: { id: true } } },
   })
-  if (teacherUser2.teacher?.id) {
-    await prisma.user.update({
-      where: { id: teacherUser2.id },
-      data: { teacherId: teacherUser2.teacher.id },
-    })
-  }
 
   // 3) 学生
   const studentUser1 = await prisma.user.create({
@@ -97,81 +90,63 @@ async function main() {
       phone: "13800000004",
       name: "小明",
       nick: "明明",
-      gender: "MALE",
-      role: "STUDENT",
+      gender: Gender.MALE,
+      role: Role.STUDENT,
       password: hashedPassword,
       student: {
         create: {
           birth: new Date("2015-05-15"),
           parentName1: "明妈妈",
           parentPhone1: "13900000001",
-          parentRole1: "母亲",
+          parentRole1: ParentRole.MOTHER,
           parentName2: "明爸爸",
           parentPhone2: "13900000002",
-          parentRole2: "父亲",
+          parentRole2: ParentRole.FATHER,
         },
       },
     },
     include: { student: { select: { id: true } } },
   })
-  if (studentUser1.student?.id) {
-    await prisma.user.update({
-      where: { id: studentUser1.id },
-      data: { studentId: studentUser1.student.id },
-    })
-  }
 
   const studentUser2 = await prisma.user.create({
     data: {
       phone: "13800000005",
       name: "小红",
       nick: "红红",
-      gender: "FEMALE",
-      role: "STUDENT",
+      gender: Gender.FEMALE,
+      role: Role.STUDENT,
       password: hashedPassword,
       student: {
         create: {
           birth: new Date("2014-08-20"),
           parentName1: "红妈妈",
           parentPhone1: "13900000003",
-          parentRole1: "母亲",
+          parentRole1: ParentRole.MOTHER,
         },
       },
     },
     include: { student: { select: { id: true } } },
   })
-  if (studentUser2.student?.id) {
-    await prisma.user.update({
-      where: { id: studentUser2.id },
-      data: { studentId: studentUser2.student.id },
-    })
-  }
 
   const studentUser3 = await prisma.user.create({
     data: {
       phone: "13800000006",
       name: "小刚",
       nick: "刚刚",
-      gender: "MALE",
-      role: "STUDENT",
+      gender: Gender.MALE,
+      role: Role.STUDENT,
       password: hashedPassword,
       student: {
         create: {
           birth: new Date("2016-02-10"),
           parentName1: "刚奶奶",
           parentPhone1: "13900000004",
-          parentRole1: "奶奶",
+          parentRole1: ParentRole.GRAND_MOTHER,
         },
       },
     },
     include: { student: { select: { id: true } } },
   })
-  if (studentUser3.student?.id) {
-    await prisma.user.update({
-      where: { id: studentUser3.id },
-      data: { studentId: studentUser3.student.id },
-    })
-  }
 
   console.log("👥 用户创建完成")
 
@@ -180,13 +155,13 @@ async function main() {
     data: {
       title: "中国舞基础班",
       subtitle: "适合零基础的小朋友，培养舞蹈兴趣",
-      category: "中国舞",
+      category: CourseCategory.DANCE,
       teacherId: teacherUser1.id,
       year: 2024,
-      term: "SPRING",
-      status: "PUBLISHED",
-      price: 120000,
+      term: CourseTerm.SPRING,
+      status: CourseStatus.OPEN,
       address: "舞蹈室A",
+      price: 120000, // 1200元，以分为单位
     },
   })
 
@@ -194,13 +169,13 @@ async function main() {
     data: {
       title: "儿童绘画启蒙",
       subtitle: "开发孩子的艺术天赋和创造力",
-      category: "绘画",
+      category: CourseCategory.PAINTING,
       teacherId: teacherUser2.id,
       year: 2024,
-      term: "SUMMER",
-      status: "PUBLISHED",
-      price: 100000,
+      term: CourseTerm.SUMMER,
+      status: CourseStatus.OPEN,
       address: "美术室B",
+      price: 100000, // 1000元，以分为单位
     },
   })
 
@@ -208,13 +183,13 @@ async function main() {
     data: {
       title: "中国舞提高班",
       subtitle: "有基础的学生进阶课程",
-      category: "中国舞",
+      category: CourseCategory.DANCE,
       teacherId: teacherUser1.id,
       year: 2024,
-      term: "SUMMER",
-      status: "DRAFT",
-      price: 150000,
+      term: CourseTerm.SUMMER,
+      status: CourseStatus.DRAFT,
       address: "舞蹈室A",
+      price: 150000, // 1500元，以分为单位
     },
   })
 
@@ -241,7 +216,7 @@ async function main() {
         subtitle: i < 4 ? "基础动作训练" : i < 8 ? "舞蹈组合练习" : "成品舞蹈",
         startTime,
         endTime,
-        status: i < 6 ? "COMPLETED" : "PENDING",
+        status: i < 6 ? LessonStatus.COMPLETED : LessonStatus.PENDING,
       },
     })
   }
@@ -264,7 +239,7 @@ async function main() {
         subtitle: i < 3 ? "色彩认知" : i < 6 ? "简单图形" : "创意绘画",
         startTime,
         endTime,
-        status: i < 4 ? "COMPLETED" : "PENDING",
+        status: i < 4 ? LessonStatus.COMPLETED : LessonStatus.PENDING,
       },
     })
   }
@@ -274,10 +249,9 @@ async function main() {
   // 6) 订单（报名）
   await prisma.order.create({
     data: {
-      orderNo: "OD20240301001",
       studentId: studentUser1.id,
       courseId: course1.id,
-      status: "REGISTERED",
+      status: OrderStatus.PAID,
       amount: 120000,
       payTime: new Date("2024-02-25T10:30:00Z"),
     },
@@ -285,10 +259,9 @@ async function main() {
 
   await prisma.order.create({
     data: {
-      orderNo: "OD20240301002",
       studentId: studentUser2.id,
       courseId: course1.id,
-      status: "REGISTERED",
+      status: OrderStatus.PAID,
       amount: 120000,
       payTime: new Date("2024-02-26T14:20:00Z"),
     },
@@ -296,10 +269,9 @@ async function main() {
 
   await prisma.order.create({
     data: {
-      orderNo: "OD20240301003",
       studentId: studentUser1.id,
       courseId: course2.id,
-      status: "REGISTERED",
+      status: OrderStatus.PAID,
       amount: 100000,
       payTime: new Date("2024-02-28T16:45:00Z"),
     },
@@ -307,12 +279,10 @@ async function main() {
 
   await prisma.order.create({
     data: {
-      orderNo: "OD20240301004",
       studentId: studentUser3.id,
       courseId: course2.id,
-      status: "REGISTERED",
+      status: OrderStatus.UNPAID,
       amount: 0,
-      payTime: new Date("2024-02-29T09:15:00Z"),
     },
   })
 

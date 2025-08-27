@@ -26,6 +26,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Plus, Trash2, Calendar, ChevronDown, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
+import { LessonStatus } from "@/lib/enums"
 
 interface Lesson {
   id?: number
@@ -33,7 +34,7 @@ interface Lesson {
   subtitle?: string
   startTime: string
   endTime: string
-  status: "PENDING" | "COMPLETED"
+  status: LessonStatus
 }
 
 interface LessonFormProps {
@@ -56,7 +57,7 @@ export function LessonForm({ disabled }: LessonFormProps) {
       subtitle: "",
       startTime: "",
       endTime: "",
-      status: "PENDING",
+      status: LessonStatus.PENDING,
     }
     append(newLesson)
   }

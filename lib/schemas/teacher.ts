@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { Gender, Job } from "@/lib/enums"
 
 export const teacherSchema = z.object({
   name: z.string().min(1, "姓名不能为空").min(2, "姓名至少2个字符").max(20, "姓名不能超过20个字符"),
@@ -8,11 +9,9 @@ export const teacherSchema = z.object({
     .min(1, "手机号不能为空")
     .regex(/^1[3-9]\d{9}$/, "请输入正确的手机号"),
 
-  email: z.string().email("请输入正确的邮箱地址").optional().or(z.literal("")),
+  gender: z.enum(Gender, "请选择性别"),
 
-  gender: z.enum(["MALE", "FEMALE"]).nullable().optional(),
-
-  position: z.string().min(1, "请选择职位"),
+  job: z.enum(Job, "请选择职位"),
 
   avatar: z.string().optional(),
 })

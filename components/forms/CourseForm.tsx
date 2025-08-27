@@ -21,6 +21,7 @@ import { StudentList } from "@/components/forms/StudentList"
 import { courseSchema, type CourseFormData } from "@/lib/schemas/course"
 import { FORM_CONFIGS, type FormMode } from "@/types/form"
 import { ChevronDown, ChevronRight, BookOpen, GraduationCap } from "lucide-react"
+import { CourseCategory, CourseTerm, courseCategoryLabels, courseTermLabels } from "@/lib/enums"
 
 interface CourseFormProps {
   id?: string | number
@@ -40,9 +41,9 @@ export function CourseForm({ id, mode }: CourseFormProps) {
     defaultValues: {
       title: "",
       subtitle: "",
-      category: "",
+      category: CourseCategory.DANCE,
       year: new Date().getFullYear(),
-      term: "SPRING",
+      term: CourseTerm.SPRING,
       price: 0,
       teacherId: 0,
       address: "",
@@ -58,9 +59,9 @@ export function CourseForm({ id, mode }: CourseFormProps) {
       form.reset({
         title: "",
         subtitle: "",
-        category: "",
+        category: CourseCategory.DANCE,
         year: new Date().getFullYear(),
-        term: "SPRING",
+        term: CourseTerm.SPRING,
         price: 0,
         teacherId: 0,
         address: "",
@@ -152,23 +153,6 @@ export function CourseForm({ id, mode }: CourseFormProps) {
     }
   }
 
-  // 课程分类选项
-  const categoryOptions = [
-    { label: "数学", value: "数学" },
-    { label: "英语", value: "英语" },
-    { label: "物理", value: "物理" },
-    { label: "化学", value: "化学" },
-    { label: "编程", value: "编程" },
-  ]
-
-  // 学期选项
-  const termOptions = [
-    { label: "春季", value: "SPRING" },
-    { label: "暑期", value: "SUMMER" },
-    { label: "秋季", value: "AUTUMN" },
-    { label: "冬季", value: "WINTER" },
-  ]
-
   const { students } = form.getValues()
 
   return (
@@ -242,7 +226,10 @@ export function CourseForm({ id, mode }: CourseFormProps) {
                     name="category"
                     label="课程分类"
                     placeholder="请选择课程分类"
-                    options={categoryOptions}
+                    options={Object.entries(courseCategoryLabels).map(([key, value]) => ({
+                      label: value,
+                      value: key,
+                    }))}
                     required
                     disabled={config.readonly}
                   />
@@ -274,7 +261,10 @@ export function CourseForm({ id, mode }: CourseFormProps) {
                     name="term"
                     label="开课学期"
                     placeholder="请选择开课学期"
-                    options={termOptions}
+                    options={Object.entries(courseTermLabels).map(([key, value]) => ({
+                      label: value,
+                      value: key,
+                    }))}
                     required
                     disabled={config.readonly}
                   />

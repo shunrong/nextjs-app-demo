@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
-import { generateOrderNo } from "@/lib/display-codes"
 import { getTermLabel } from "@/lib/term-utils"
+import { Role, OrderStatus } from "@/lib/enums"
 
 // 获取订单列表
 export async function GET(request: NextRequest) {
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     // 格式化订单数据
     const formattedOrders = orders.map(order => ({
       id: order.id,
-      orderNo: order.orderNo,
+      displayCode: `OD${String(order.id).padStart(6, "0")}`,
       studentName: order.student.name,
       studentPhone: order.student.phone,
       parentName: order.student.student?.parentName1,
@@ -99,7 +99,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 检查权限：老师和老板可以为学生创建订单
-    if (!["TEACHER", "BOSS"].includes(session.user.role)) {
+    const userRole = parseInt(session.user.role)
+    if (![Role.TEACHER, Role.BOSS].includes(userRole)) {
       return NextResponse.json({ error: "权限不足" }, { status: 403 })
     }
 
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
     const student = await prisma.user.findFirst({
       where: {
         id: studentId,
-        role: "STUDENT",
+        role: Role.STUDENT,
       },
     })
 
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
       where: {
         studentId: studentId,
         courseId: courseId,
-        status: "REGISTERED",
+        status: OrderStatus.PAID,
       },
     })
 
@@ -145,16 +146,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "该学生已经报名过这门课程" }, { status: 400 })
     }
 
-    // 生成订单号
-    const orderNo = generateOrderNo(Date.now() % 1000, new Date())
-
     const order = await prisma.order.create({
       data: {
-        orderNo,
         studentId,
         courseId,
         amount: amount || course.price, // 使用传入的金额或课程价格
-        status: "REGISTERED",
+        status: OrderStatus.PAID,
         payTime: payTime ? new Date(payTime) : new Date(), // 支付时间
       },
       include: {
@@ -169,7 +166,6 @@ export async function POST(request: NextRequest) {
         message: "报名成功",
         data: {
           id: order.id,
-          orderNo: order.orderNo,
           studentName: order.student.name,
           courseTitle: order.course.title,
           amount: order.amount,

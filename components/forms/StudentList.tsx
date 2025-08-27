@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -13,16 +12,15 @@ import {
 } from "@/components/ui/table"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Users, ChevronDown, ChevronRight } from "lucide-react"
+import { OrderStatus, Gender, genderLabels, orderStatusLabels } from "@/lib/enums"
 
 interface Student {
   id: number
   name: string
   phone: string
-  email: string | null
-  gender: "MALE" | "FEMALE" | null
+  gender: Gender
   orderId: number
-  orderNo: string
-  status: "REGISTERED" | "CANCELLED"
+  status: OrderStatus
   amount: number
   payTime: string | null
   createdAt: string
@@ -51,20 +49,6 @@ function formatCurrency(amount: number) {
 
 export function StudentList({ students }: StudentListProps) {
   const [isOpen, setIsOpen] = useState(true)
-
-  const getStatusBadge = (status: string) => {
-    return status === "REGISTERED" ? (
-      <Badge variant="default" className="bg-green-500">
-        已登记
-      </Badge>
-    ) : (
-      <Badge variant="destructive">已取消</Badge>
-    )
-  }
-
-  const getGenderText = (gender: string | null) => {
-    return gender === "MALE" ? "男" : gender === "FEMALE" ? "女" : "-"
-  }
 
   return (
     <Card>
@@ -113,14 +97,14 @@ export function StudentList({ students }: StudentListProps) {
                         <TableCell>{student.phone}</TableCell>
 
                         <TableCell>
-                          <span className="text-sm">{getGenderText(student.gender)}</span>
+                          <span className="text-sm">{genderLabels[student.gender]}</span>
                         </TableCell>
 
                         <TableCell>
-                          <span className="font-mono text-xs">{student.orderNo}</span>
+                          <span className="font-mono text-xs">{`OD${String(student.orderId).padStart(6, "0")}`}</span>
                         </TableCell>
 
-                        <TableCell>{getStatusBadge(student.status)}</TableCell>
+                        <TableCell>{orderStatusLabels[student.status]}</TableCell>
 
                         <TableCell>
                           <span className="font-medium text-primary">

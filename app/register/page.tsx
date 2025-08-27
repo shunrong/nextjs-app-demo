@@ -14,14 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Role, roleLabels } from "@/lib/enums"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
-    role: "STUDENT",
+    role: Role.STUDENT,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -44,7 +45,7 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
-          email: formData.email,
+          phone: formData.phone,
           password: formData.password,
           role: formData.role,
         }),
@@ -93,12 +94,13 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="grid gap-3">
-                  <Label htmlFor="email">邮箱</Label>
+                  <Label htmlFor="phone">手机号</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    id="phone"
+                    type="tel"
+                    placeholder="请输入手机号"
+                    value={formData.phone}
+                    onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                     required
                     disabled={isLoading}
                   />
@@ -107,16 +109,21 @@ export default function RegisterPage() {
                 <div className="grid gap-3">
                   <Label htmlFor="role">身份</Label>
                   <Select
-                    value={formData.role}
-                    onValueChange={value => setFormData(prev => ({ ...prev, role: value }))}
+                    value={formData.role.toString()}
+                    onValueChange={value =>
+                      setFormData(prev => ({ ...prev, role: Number(value) as Role }))
+                    }
                     disabled={isLoading}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="选择身份" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="STUDENT">学生</SelectItem>
-                      <SelectItem value="TEACHER">教师</SelectItem>
+                      {Object.entries(roleLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

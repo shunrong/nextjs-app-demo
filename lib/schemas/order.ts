@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { OrderStatus } from "@/lib/enums"
 
 export const orderSchema = z.object({
   studentId: z.number().min(1, "请选择学生"),
@@ -9,9 +10,7 @@ export const orderSchema = z.object({
 
   orderNo: z.string().min(1, "订单号不能为空"),
 
-  status: z.enum(["REGISTERED", "CANCELLED"]).refine(val => val !== undefined, {
-    message: "请选择订单状态",
-  }),
+  status: z.nativeEnum(OrderStatus),
 
   payTime: z.string().optional(),
 })

@@ -3,12 +3,12 @@ import { NextRequest, NextResponse } from "next/server"
 import * as XLSX from "xlsx"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/prisma"
+import { ParentRole, Role } from "@/lib/enums"
 
 interface StudentImportData {
   name: string
   phone: string
-  gender?: "MALE" | "FEMALE"
-  email?: string
+  gender: number
 }
 
 interface ImportResult {
@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
     const nameIndex = headers.indexOf("学生姓名")
     const phoneIndex = headers.indexOf("手机号")
     const genderIndex = headers.indexOf("性别")
-    const emailIndex = headers.indexOf("邮箱")
 
     // 解析数据
     const students: StudentImportData[] = []
@@ -93,8 +92,7 @@ export async function POST(request: NextRequest) {
 
       const name = row[nameIndex]?.toString().trim()
       const phone = row[phoneIndex]?.toString().trim()
-      const genderStr = row[genderIndex]?.toString().trim()
-      const email = row[emailIndex]?.toString().trim()
+      const gender = Number(row[genderIndex]?.toString().trim())
 
       // 验证必需字段
       if (!name) {
@@ -122,36 +120,10 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      // 验证性别
-      let gender: "MALE" | "FEMALE" | undefined
-      if (genderStr) {
-        if (genderStr === "男" || genderStr === "MALE") {
-          gender = "MALE"
-        } else if (genderStr === "女" || genderStr === "FEMALE") {
-          gender = "FEMALE"
-        } else {
-          skippedRows.push({
-            data: row,
-            reason: `第${rowNum}行：性别格式不正确（请填写"男"或"女"）`,
-          })
-          continue
-        }
-      }
-
-      // 验证邮箱格式（如果提供）
-      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        skippedRows.push({
-          data: row,
-          reason: `第${rowNum}行：邮箱格式不正确`,
-        })
-        continue
-      }
-
       students.push({
         name,
         phone,
         gender,
-        email: email || undefined,
       })
     }
 
@@ -206,9 +178,8 @@ async function importStudentsToDatabase(
           data: {
             phone: student.phone,
             name: student.name,
-            email: student.email,
             password: defaultPassword,
-            role: "STUDENT",
+            role: Role.STUDENT,
             gender: student.gender,
           },
         })
@@ -217,6 +188,9 @@ async function importStudentsToDatabase(
         await tx.student.create({
           data: {
             userId: newUser.id,
+            parentPhone1: student.phone,
+            parentName1: `${student.name}妈妈`,
+            parentRole1: ParentRole.MOTHER,
           },
         })
       })

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from "@/components/data-table"
 import { useApi } from "@/hooks/use-api"
-import { getTermLabel } from "@/lib/term-utils"
 import { LayoutGrid, Table as TableIcon, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -20,6 +19,13 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination"
+import {
+  CourseCategory,
+  CourseStatus,
+  CourseTerm,
+  courseStatusLabels,
+  courseTermLabels,
+} from "@/lib/enums"
 
 const PAGE_SIZE = 10
 
@@ -46,10 +52,10 @@ interface Course {
   subtitle?: string | null
   category: string
   year: number
-  term: "SPRING" | "SUMMER" | "AUTUMN" | "WINTER"
+  term: CourseTerm
   price: number
   banner?: string | null
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
+  status: CourseStatus
   address?: string | null
   teacher: string
   teacherId: number
@@ -146,7 +152,7 @@ export default function CoursesPage() {
                 header: "学期",
                 accessorKey: "term",
                 cell: ({ row }) => {
-                  return `${row.original.year}年${getTermLabel(row.original.term)}`
+                  return `${row.original.year}年${courseTermLabels[row.original.term]}`
                 },
               },
               { header: "讲师", accessorKey: "teacher" },
@@ -160,10 +166,7 @@ export default function CoursesPage() {
               {
                 header: "状态",
                 accessorKey: "status",
-                cell: ({ getValue }) =>
-                  ({ DRAFT: "草稿", PUBLISHED: "已发布", ARCHIVED: "已归档" })[
-                    String(getValue()) as "DRAFT" | "PUBLISHED" | "ARCHIVED"
-                  ],
+                cell: ({ row }) => courseStatusLabels[row.original.status],
               },
               {
                 header: "更新于",
@@ -222,14 +225,13 @@ export default function CoursesPage() {
             : courses.map(c => {
                 // 根据分类选择渐变色
                 const gradients = {
-                  数学: "from-emerald-400 to-emerald-600",
-                  英语: "from-blue-400 to-blue-600",
-                  物理: "from-orange-400 to-orange-600",
-                  化学: "from-red-400 to-red-600",
-                  编程: "from-purple-400 to-purple-600",
+                  [CourseCategory.DANCE]: "from-emerald-400 to-emerald-600",
+                  [CourseCategory.PAINTING]: "from-blue-400 to-blue-600",
+                  [CourseCategory.SPEECH]: "from-orange-400 to-orange-600",
+                  [CourseCategory.MUSIC]: "from-red-400 to-red-600",
                 }
                 const gradient =
-                  gradients[c.category as keyof typeof gradients] || "from-gray-400 to-gray-600"
+                  gradients[c.category as unknown as CourseCategory] || "from-gray-400 to-gray-600"
 
                 return (
                   <Card
@@ -253,18 +255,14 @@ export default function CoursesPage() {
                         <Badge
                           variant="sale"
                           className={`text-white text-xs px-2 py-1 rounded-sm ${
-                            c.status === "PUBLISHED"
+                            c.status === CourseStatus.OPEN
                               ? "bg-green-500"
-                              : c.status === "DRAFT"
+                              : c.status === CourseStatus.DRAFT
                                 ? "bg-yellow-500"
                                 : "bg-gray-500"
                           }`}
                         >
-                          {c.status === "PUBLISHED"
-                            ? "已发布"
-                            : c.status === "DRAFT"
-                              ? "草稿"
-                              : "已归档"}
+                          {courseStatusLabels[c.status]}
                         </Badge>
                       </div>
 
@@ -282,8 +280,7 @@ export default function CoursesPage() {
                           {c.subtitle || `${c.category} 专业课程，由 ${c.teacher} 授课`}
                         </p>
                         <div className="text-white/80 text-xs mt-1">
-                          {c.year}年{getTermLabel(c.term)}学期
-                          {c.address && ` · ${c.address}`}
+                          {c.year}年{courseTermLabels[c.term]}班{c.address && ` · ${c.address}`}
                         </div>
                       </div>
                     </div>

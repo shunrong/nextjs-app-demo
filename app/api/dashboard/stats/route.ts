@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { CourseStatus, Role, OrderStatus } from "@/lib/enums"
 
 // 获取仪表板统计数据
 export async function GET() {
@@ -23,35 +24,35 @@ export async function GET() {
     ] = await Promise.all([
       // 总学生数
       prisma.user.count({
-        where: { role: "STUDENT" },
+        where: { role: Role.STUDENT },
       }),
 
       // 活跃课程数
       prisma.course.count({
-        where: { status: "PUBLISHED" },
+        where: { status: CourseStatus.OPEN },
       }),
 
       // 总订单数（报名记录）
       prisma.order.count({
-        where: { status: "REGISTERED" },
+        where: { status: OrderStatus.PAID },
       }),
 
       // 在职教师数
       prisma.user.count({
         where: {
-          role: "TEACHER",
+          role: Role.TEACHER,
         },
       }),
 
       // 老板数
       prisma.user.count({
-        where: { role: "BOSS" },
+        where: { role: Role.BOSS },
       }),
 
       // 本月收入（所有已登记的订单）
       prisma.order.aggregate({
         where: {
-          status: "REGISTERED",
+          status: OrderStatus.PAID,
           payTime: {
             gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
           },
@@ -82,7 +83,7 @@ export async function GET() {
     // 课程分类统计
     const courseCategories = await prisma.course.groupBy({
       by: ["category"],
-      where: { status: "PUBLISHED" },
+      where: { status: CourseStatus.OPEN },
       _count: {
         category: true,
       },
@@ -128,7 +129,6 @@ export async function GET() {
       // 最近订单
       recentOrders: recentOrders.map(order => ({
         id: order.id,
-        orderNo: order.orderNo,
         studentName: order.student.name,
         courseTitle: order.course.title,
         courseCategory: order.course.category,

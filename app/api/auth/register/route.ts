@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/prisma"
+import { Role, isValidRole } from "@/lib/enums"
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, phone, email, password, role = "STUDENT" } = await request.json()
+    const { name, phone, password, role = Role.STUDENT } = await request.json()
 
     if (!name || !phone || !password) {
       return NextResponse.json({ error: "姓名、手机号和密码都是必填项" }, { status: 400 })
+    }
+
+    // 验证角色
+    if (!isValidRole(role)) {
+      return NextResponse.json({ error: "无效的角色" }, { status: 400 })
     }
 
     // 检查手机号是否已存在
@@ -27,15 +33,13 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         phone,
-        email,
         password: hashedPassword,
-        role: role as "STUDENT" | "TEACHER" | "BOSS",
+        role: role as Role,
       },
       select: {
         id: true,
         name: true,
         phone: true,
-        email: true,
         role: true,
       },
     })
