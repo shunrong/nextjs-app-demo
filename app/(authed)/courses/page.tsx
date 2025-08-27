@@ -27,8 +27,6 @@ import {
   courseTermLabels,
 } from "@/lib/enums"
 
-const PAGE_SIZE = 10
-
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
@@ -70,6 +68,8 @@ export default function CoursesPage() {
   const [query, setQuery] = useState("")
   const [pageIndex, setPageIndex] = useState(1)
   const [tab, setTab] = useState("card")
+
+  const PAGE_SIZE = tab === "card" ? 12 : 12
 
   const {
     data: courses,

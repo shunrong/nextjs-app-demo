@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { Gender } from "@/lib/enums"
+import { Gender, ParentRole } from "@/lib/enums"
 
 export const studentSchema = z.object({
   name: z.string().min(1, "姓名不能为空").min(2, "姓名至少2个字符").max(20, "姓名不能超过20个字符"),
@@ -32,7 +32,7 @@ export const studentSchema = z.object({
     .min(1, "监护人手机号不能为空")
     .regex(/^1[3-9]\d{9}$/, "请输入正确的监护人手机号"),
 
-  parentRole1: z.string().min(1, "请选择与学生的关系"),
+  parentRole1: z.enum(ParentRole, "请选择关系"),
 
   // 可选的第二监护人
   parentName2: z.string().optional(),

@@ -98,17 +98,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 {isLoading ? "登录中..." : "登录"}
               </Button>
             </div>
-
-            {/* 测试账号提示 */}
-            <div className="mt-6 p-4 bg-muted rounded-md">
-              <p className="text-sm font-medium mb-2">测试账号：</p>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <p>老板：13800000001 / 123456</p>
-                <p>李老师：13800000002 / 123456</p>
-                <p>王老师：13800000003 / 123456</p>
-                <p>小明：13800000004 / 123456</p>
-              </div>
-            </div>
           </form>
         </CardContent>
       </Card>

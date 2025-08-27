@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
         ? {
             OR: [
               { name: { contains: search, mode: "insensitive" as const } },
-              { email: { contains: search, mode: "insensitive" as const } },
               { phone: { contains: search, mode: "insensitive" as const } },
             ],
           }
@@ -48,9 +47,9 @@ export async function GET(request: NextRequest) {
 
     // 格式化教师数据并添加显示编码
     const formattedTeachers = teachers.map(teacher => ({
-      id: teacher.id,
-      displayCode: `T${String(teacher.id).padStart(3, "0")}`, // 动态生成显示编码
+      id: teacher.teacher?.id,
       name: teacher.name,
+      nick: teacher.nick,
       phone: teacher.phone,
       gender: teacher.gender,
       avatar: teacher.avatar,
@@ -144,11 +143,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        id: teacherUser.id,
-        displayCode: `T${String(teacherUser.id).padStart(3, "0")}`,
+        id: teacherUser.teacher?.id,
         name: teacherUser.name,
         phone: teacherUser.phone,
-        job,
+        job: teacherUser.teacher?.job,
       },
     })
   } catch (error) {

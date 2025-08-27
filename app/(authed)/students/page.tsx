@@ -22,8 +22,6 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination"
 
-const PAGE_SIZE = 10
-
 function formatDate(input: string) {
   return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
@@ -53,6 +51,8 @@ export default function StudentsPage() {
   const [pageIndex, setPageIndex] = useState(1)
   const [tab, setTab] = useState("card")
   const [activeTab, setActiveTab] = useState("list") // 新增：list 或 import
+
+  const PAGE_SIZE = tab === "card" ? 12 : 10
 
   const {
     data: students,
@@ -131,10 +131,8 @@ export default function StudentsPage() {
                   columns={[
                     {
                       header: "编号",
-                      accessorKey: "displayCode",
-                      cell: ({ getValue }) => (
-                        <span className="font-mono text-sm">{String(getValue())}</span>
-                      ),
+                      accessorKey: "id",
+                      cell: ({ row }) => `ST${String(row.original.id).padStart(6, "0")}`,
                     },
                     {
                       header: "姓名",
@@ -143,21 +141,13 @@ export default function StudentsPage() {
                     },
                     { header: "手机号", accessorKey: "phone" },
                     {
-                      header: "邮箱",
-                      accessorKey: "email",
-                      cell: ({ getValue }) => getValue() || "-",
-                    },
-                    {
                       header: "性别",
                       accessorKey: "gender",
-                      cell: ({ getValue }) => {
-                        const gender = getValue() as "MALE" | "FEMALE" | null
-                        return gender === "MALE" ? "男" : gender === "FEMALE" ? "女" : "-"
-                      },
+                      cell: ({ row }) => genderLabels[row.original.gender],
                     },
                     { header: "选课数", accessorKey: "enrolledCourses" },
                     {
-                      header: "监护人",
+                      header: "家长",
                       accessorKey: "parentName1",
                       cell: ({ row }) => {
                         const parent1 = row.original.parentName1
@@ -227,7 +217,7 @@ export default function StudentsPage() {
                                 variant="sale"
                                 className="text-white text-xs px-2 py-1 rounded-sm bg-white/20"
                               >
-                                {s.displayCode}
+                                {`ST${String(s.id).padStart(6, "0")}`}
                               </Badge>
                             </div>
 
@@ -245,9 +235,7 @@ export default function StudentsPage() {
                                 {genderLabels[s.gender]} · {s.phone}
                               </p>
                               {s.parentName1 && (
-                                <p className="text-white/80 text-xs mt-1">
-                                  监护人：{s.parentName1}
-                                </p>
+                                <p className="text-white/80 text-xs mt-1">家长：{s.parentName1}</p>
                               )}
                             </div>
                           </div>

@@ -81,16 +81,40 @@ export default function RegisterPage() {
                   </div>
                 )}
 
-                <div className="grid gap-3">
-                  <Label htmlFor="name">姓名</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                    disabled={isLoading}
-                  />
+                <div className="flex gap-3 justify-between">
+                  <div className="grid gap-3 flex-1">
+                    <Label htmlFor="name">姓名</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  <div className="grid gap-3">
+                    <Label htmlFor="role">身份</Label>
+                    <Select
+                      value={formData.role.toString()}
+                      onValueChange={value =>
+                        setFormData(prev => ({ ...prev, role: Number(value) as Role }))
+                      }
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择身份" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(roleLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="grid gap-3">
@@ -104,28 +128,6 @@ export default function RegisterPage() {
                     required
                     disabled={isLoading}
                   />
-                </div>
-
-                <div className="grid gap-3">
-                  <Label htmlFor="role">身份</Label>
-                  <Select
-                    value={formData.role.toString()}
-                    onValueChange={value =>
-                      setFormData(prev => ({ ...prev, role: Number(value) as Role }))
-                    }
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择身份" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(roleLabels).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className="grid gap-3">

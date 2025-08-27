@@ -63,7 +63,6 @@ export async function GET(request: NextRequest) {
     // 格式化订单数据
     const formattedOrders = orders.map(order => ({
       id: order.id,
-      displayCode: `OD${String(order.id).padStart(6, "0")}`,
       studentName: order.student.name,
       studentPhone: order.student.phone,
       parentName: order.student.student?.parentName1,

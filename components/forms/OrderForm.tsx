@@ -17,6 +17,7 @@ import {
 } from "@/components/forms/FormField"
 import { orderSchema, type OrderFormData } from "@/lib/schemas/order"
 import { FORM_CONFIGS, type FormMode } from "@/types/form"
+import { OrderStatus } from "@/lib/enums"
 
 interface OrderFormProps {
   id?: string | number
@@ -34,8 +35,7 @@ export function OrderForm({ id, mode, initialData }: OrderFormProps) {
       studentId: 0,
       courseId: 0,
       amount: 0,
-      orderNo: "",
-      status: "REGISTERED",
+      status: OrderStatus.UNPAID,
       payTime: "",
     },
   })
@@ -48,13 +48,9 @@ export function OrderForm({ id, mode, initialData }: OrderFormProps) {
         studentId: 0,
         courseId: 0,
         amount: 0,
-        orderNo: "",
-        status: "REGISTERED",
+        status: OrderStatus.UNPAID,
         payTime: "",
       })
-    } else if (initialData) {
-      // 查看/编辑模式
-      form.reset(initialData)
     } else if (id) {
       // 从 API 获取数据
       fetchOrderData(id)
@@ -229,7 +225,7 @@ export function OrderForm({ id, mode, initialData }: OrderFormProps) {
                 disabled={config.readonly}
               />
 
-              {form.watch("status") === "REGISTERED" && (
+              {form.watch("status") === OrderStatus.PAID && (
                 <DateField form={form} name="payTime" label="缴费时间" disabled={config.readonly} />
               )}
             </CardContent>

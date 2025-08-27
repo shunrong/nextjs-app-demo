@@ -115,7 +115,7 @@ export function TextareaField<T extends FieldValues>({
 
 // 选择字段
 interface SelectFieldProps<T extends FieldValues> extends BaseFieldProps<T> {
-  options: Array<{ label: string; value: string }>
+  options: Array<{ label: string; value: string | number }>
 }
 
 export function SelectField<T extends FieldValues>({
@@ -199,7 +199,7 @@ export function DateField<T extends FieldValues>({
 
 // 单选字段
 interface RadioFieldProps<T extends FieldValues> extends BaseFieldProps<T> {
-  options: Array<{ label: string; value: string }>
+  options: Array<{ label: string; value: string | number }>
 }
 
 export function RadioField<T extends FieldValues>({

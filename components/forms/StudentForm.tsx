@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import { TextField, SelectField, DateField, RadioField } from "@/components/forms/FormField"
 import { studentSchema, type StudentFormData } from "@/lib/schemas/student"
 import { FORM_CONFIGS, type FormMode } from "@/types/form"
-import { Gender, genderLabels, parentRoleLabels } from "@/lib/enums"
+import { Gender, genderLabels, ParentRole, parentRoleLabels } from "@/lib/enums"
 
 interface StudentFormProps {
   id?: string | number
@@ -32,7 +32,7 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
       birth: "",
       parentName1: "",
       parentPhone1: "",
-      parentRole1: "",
+      parentRole1: ParentRole.MOTHER,
       parentName2: "",
       parentPhone2: "",
       parentRole2: "",
@@ -51,7 +51,7 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
         birth: "",
         parentName1: "",
         parentPhone1: "",
-        parentRole1: "",
+        parentRole1: ParentRole.MOTHER,
         parentName2: "",
         parentPhone2: "",
         parentRole2: "",
@@ -65,9 +65,6 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
         phone: "", // 手机号需要重新填写
         parentPhone1: "", // 家长手机号也需要重新填写
       })
-    } else if (initialData) {
-      // 查看/编辑模式
-      form.reset(initialData)
     } else if (id) {
       // 从 API 获取数据
       fetchStudentData(id)
@@ -190,7 +187,7 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
                   label="性别"
                   options={Object.entries(genderLabels).map(([value, label]) => ({
                     label,
-                    value,
+                    value: Number(value),
                   }))}
                   disabled={config.readonly}
                 />
@@ -232,7 +229,7 @@ export function StudentForm({ id, mode, initialData }: StudentFormProps) {
                   placeholder="请选择关系"
                   options={Object.entries(parentRoleLabels).map(([value, label]) => ({
                     label,
-                    value,
+                    value: Number(value),
                   }))}
                   required
                   disabled={config.readonly}

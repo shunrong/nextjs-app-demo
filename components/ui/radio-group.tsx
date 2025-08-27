@@ -22,7 +22,8 @@ function RadioGroup({
 function RadioGroupItem({
   className,
   ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+}: React.ComponentProps<any>) {
   return (
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"

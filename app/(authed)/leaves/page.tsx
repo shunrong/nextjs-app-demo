@@ -45,7 +45,6 @@ function formatDateTime(input: string | Date) {
 
 interface Leave {
   id: number
-  displayCode: string
   studentId: number
   studentName: string
   studentPhone: string
@@ -102,15 +101,14 @@ export default function LeavesPage() {
         </div>
       ) : (
         <DataTable
+          key="id"
           pageSize={PAGE_SIZE}
           data={leaves}
           columns={[
             {
               header: "编号",
-              accessorKey: "displayCode",
-              cell: ({ getValue }) => (
-                <span className="font-mono text-sm">{String(getValue())}</span>
-              ),
+              accessorKey: "id",
+              cell: ({ row }) => `LE${String(row.original.id).padStart(5, "0")}`,
             },
             {
               header: "学生信息",

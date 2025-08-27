@@ -48,9 +48,9 @@ export async function GET(request: NextRequest) {
 
     // 格式化学生数据并添加显示编码
     const formattedStudents = students.map(student => ({
-      id: student.id,
-      displayCode: `S${String(student.id).padStart(3, "0")}`, // 动态生成显示编码
+      id: student.student?.id,
       name: student.name,
+      nick: student.nick,
       phone: student.phone,
       gender: student.gender,
       // 学生特有信息

@@ -127,16 +127,81 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 批量导入数据
-    const result = await importStudentsToDatabase(students)
+    // 创建流式响应
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder()
 
-    return NextResponse.json({
-      ...result,
-      skipped: skippedRows.length,
-      success: true,
-      details: {
-        ...result.details,
-        skipped: skippedRows,
+        try {
+          // 发送初始信息
+          const totalStudents = students.length + skippedRows.length
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "init",
+                total: totalStudents,
+                validStudents: students.length,
+                skippedStudents: skippedRows.length,
+              })}\n\n`
+            )
+          )
+
+          // 批量导入数据并发送进度
+          const result = await importStudentsToDatabase(
+            students,
+            (processed, total, currentStudent) => {
+              const progress = Math.round((processed / total) * 100)
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({
+                    type: "progress",
+                    processed,
+                    total,
+                    progress,
+                    currentStudent,
+                  })}\n\n`
+                )
+              )
+            }
+          )
+
+          // 发送最终结果
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "complete",
+                ...result,
+                skipped: skippedRows.length,
+                success: true,
+                details: {
+                  ...result.details,
+                  skipped: skippedRows,
+                },
+              })}\n\n`
+            )
+          )
+
+          controller.close()
+        } catch (error) {
+          console.error("导入失败:", error)
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "error",
+                error: error instanceof Error ? error.message : "导入失败，请稍后重试",
+              })}\n\n`
+            )
+          )
+          controller.close()
+        }
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
       },
     })
   } catch (error) {
@@ -146,7 +211,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function importStudentsToDatabase(
-  students: StudentImportData[]
+  students: StudentImportData[],
+  onProgress?: (processed: number, total: number, currentStudent: string) => void
 ): Promise<Omit<ImportResult, "skipped">> {
   const imported: StudentImportData[] = []
   const failed: { data: StudentImportData; error: string }[] = []
@@ -154,8 +220,15 @@ async function importStudentsToDatabase(
   // 默认密码
   const defaultPassword = await bcrypt.hash("123456", 10)
 
-  for (const student of students) {
+  for (let i = 0; i < students.length; i++) {
+    const student = students[i]
+
     try {
+      // 发送进度更新
+      if (onProgress) {
+        onProgress(i, students.length, student.name)
+      }
+
       // 检查用户是否已存在
       const existingUser = await prisma.user.findFirst({
         where: {
@@ -203,6 +276,11 @@ async function importStudentsToDatabase(
         error: error instanceof Error ? error.message : "未知错误",
       })
     }
+  }
+
+  // 发送最终进度
+  if (onProgress) {
+    onProgress(students.length, students.length, "完成")
   }
 
   return {

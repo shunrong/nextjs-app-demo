@@ -36,6 +36,11 @@ export function StudentImport() {
   const [importing, setImporting] = useState(false)
   const [result, setResult] = useState<ImportResult | null>(null)
   const [progress, setProgress] = useState(0)
+  const [progressInfo, setProgressInfo] = useState<{
+    processed: number
+    total: number
+    currentStudent: string
+  } | null>(null)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -80,37 +85,83 @@ export function StudentImport() {
 
     setImporting(true)
     setProgress(0)
+    setProgressInfo(null)
 
     try {
       const formData = new FormData()
       formData.append("file", file)
-
-      // 模拟进度
-      const progressInterval = setInterval(() => {
-        setProgress(prev => Math.min(prev + 10, 90))
-      }, 100)
 
       const response = await fetch("/api/students/import", {
         method: "POST",
         body: formData,
       })
 
-      clearInterval(progressInterval)
-      setProgress(100)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "请求失败")
+      }
 
-      const data = await response.json()
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
 
-      if (data.success) {
-        setResult(data)
-        toast.success(`导入完成！成功导入 ${data.imported} 个学生`)
-      } else {
-        throw new Error(data.error)
+      if (!reader) {
+        throw new Error("无法读取响应流")
+      }
+
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) break
+
+        const chunk = decoder.decode(value)
+        const lines = chunk.split("\n")
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6))
+
+              switch (data.type) {
+                case "init":
+                  setProgressInfo({
+                    processed: 0,
+                    total: data.validStudents,
+                    currentStudent: "准备导入...",
+                  })
+                  break
+
+                case "progress":
+                  setProgress(data.progress)
+                  setProgressInfo({
+                    processed: data.processed + 1,
+                    total: data.total,
+                    currentStudent: data.currentStudent,
+                  })
+                  break
+
+                case "complete":
+                  setProgress(100)
+                  setResult(data)
+                  toast.success(`导入完成！成功导入 ${data.imported} 个学生`)
+                  break
+
+                case "error":
+                  throw new Error(data.error)
+              }
+            } catch (parseError) {
+              console.error("解析进度数据失败:", parseError)
+            }
+          }
+        }
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "导入失败")
     } finally {
       setImporting(false)
-      setTimeout(() => setProgress(0), 1000)
+      setTimeout(() => {
+        setProgress(0)
+        setProgressInfo(null)
+      }, 2000)
     }
   }
 
@@ -118,6 +169,7 @@ export function StudentImport() {
     setFile(null)
     setResult(null)
     setProgress(0)
+    setProgressInfo(null)
     // 重置文件输入
     const fileInput = document.getElementById("file-input") as HTMLInputElement
     if (fileInput) {
@@ -170,12 +222,22 @@ export function StudentImport() {
 
           {/* 进度条 */}
           {importing && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span>导入进度</span>
                 <span>{progress}%</span>
               </div>
               <Progress value={progress} className="w-full" />
+              {progressInfo && (
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between">
+                    <span>
+                      已处理: {progressInfo.processed} / {progressInfo.total}
+                    </span>
+                    <span>当前: {progressInfo.currentStudent}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -215,7 +277,7 @@ export function StudentImport() {
             {/* 统计信息 */}
             <div className="grid grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">{result.total}</div>
+                <div className="text-2xl font-bold">{result.total + result.skipped}</div>
                 <div className="text-sm text-muted-foreground">总计</div>
               </div>
               <div className="text-center">

@@ -106,7 +106,7 @@ export default function OrdersPage() {
           <Table className="text-sm">
             <TableHeader>
               <TableRow>
-                <TableHead>报名登记号</TableHead>
+                <TableHead>订单号</TableHead>
                 <TableHead>学生</TableHead>
                 <TableHead>课程</TableHead>
                 <TableHead>学期</TableHead>
@@ -120,7 +120,7 @@ export default function OrdersPage() {
             <TableBody>
               {orders.map(o => (
                 <TableRow key={o.id}>
-                  <TableCell className="font-mono text-xs">{o.orderNo}</TableCell>
+                  <TableCell>{`OD${String(o.id).padStart(6, "0")}`}</TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium">{o.studentName}</div>

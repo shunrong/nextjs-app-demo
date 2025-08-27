@@ -10,7 +10,7 @@ import { useApi } from "@/hooks/use-api"
 import { LayoutGrid, Table as TableIcon, UserCheck, BookOpen } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Gender, genderLabels } from "@/lib/enums"
+import { Gender, genderLabels, Job, jobLabels } from "@/lib/enums"
 import {
   Pagination,
   PaginationContent,
@@ -20,8 +20,6 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination"
-
-const PAGE_SIZE = 10
 
 function formatDate(input: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -35,10 +33,11 @@ interface Teacher {
   id: number
   displayCode: string
   name: string
+  nick?: string
   phone: string
   gender: Gender
   avatar?: string | null
-  position: string
+  job: Job
   courseCount: number
   joinedAt: string
 }
@@ -47,6 +46,8 @@ export default function TeachersPage() {
   const [query, setQuery] = useState("")
   const [pageIndex, setPageIndex] = useState(1)
   const [tab, setTab] = useState("card")
+
+  const PAGE_SIZE = tab === "card" ? 12 : 10
 
   const {
     data: teachers,
@@ -106,10 +107,8 @@ export default function TeachersPage() {
             columns={[
               {
                 header: "编号",
-                accessorKey: "displayCode",
-                cell: ({ getValue }) => (
-                  <span className="font-mono text-sm">{String(getValue())}</span>
-                ),
+                accessorKey: "id",
+                cell: ({ row }) => `TC${String(row.original.id).padStart(3, "0")}`,
               },
               {
                 header: "姓名",
@@ -117,16 +116,16 @@ export default function TeachersPage() {
                 cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
               },
               { header: "手机号", accessorKey: "phone" },
-              { header: "邮箱", accessorKey: "email", cell: ({ getValue }) => getValue() || "-" },
               {
                 header: "性别",
                 accessorKey: "gender",
-                cell: ({ getValue }) => {
-                  const gender = getValue() as Gender | null
-                  return gender ? genderLabels[gender] : "-"
-                },
+                cell: ({ row }) => genderLabels[row.original.gender],
               },
-              { header: "职位", accessorKey: "position" },
+              {
+                header: "职位",
+                accessorKey: "job",
+                cell: ({ row }) => jobLabels[row.original.job],
+              },
               { header: "课程数", accessorKey: "courseCount" },
               {
                 header: "加入时间",
@@ -176,11 +175,10 @@ export default function TeachersPage() {
             : teachers.map(t => {
                 // 根据职位选择渐变色
                 const gradients = {
-                  主课: "from-cyan-400 to-cyan-600",
-                  助教: "from-purple-400 to-purple-600",
+                  [Job.TEACHER]: "from-cyan-400 to-cyan-600",
+                  [Job.ASSISTANT]: "from-purple-400 to-purple-600",
                 }
-                const gradient =
-                  gradients[t.position as keyof typeof gradients] || "from-gray-400 to-gray-600"
+                const gradient = gradients[t.job]
 
                 return (
                   <Card
@@ -195,7 +193,7 @@ export default function TeachersPage() {
                           variant="sale"
                           className="text-white text-xs px-2 py-1 rounded-sm bg-white/20"
                         >
-                          {t.displayCode}
+                          {`TC${String(t.id).padStart(3, "0")}`}
                         </Badge>
                       </div>
 
@@ -221,6 +219,10 @@ export default function TeachersPage() {
                         <span className="flex items-center gap-1">
                           <BookOpen className="size-4" />
                           {t.courseCount} 门课程
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <UserCheck className="size-4" />
+                          {t.nick}
                         </span>
                       </div>
 
