@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
+import { BookOpen, PhoneCall, Calendar1 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +13,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet"
 import { DataTable, type DataTableProps } from "@/components/data-table"
 import { DataCards } from "@/components/data-cards"
@@ -20,6 +21,8 @@ import { PageTurning } from "@/components/page-turning"
 import { StudentImport } from "@/components/forms/StudentImport"
 import { useApi } from "@/hooks/use-api"
 import { Gender, genderLabels } from "@/lib/enums"
+import boyAvatar from "@/public/boy.png"
+import girlAvatar from "@/public/girl.png"
 
 function formatDate(input: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -33,6 +36,8 @@ interface Student {
   id: number
   displayCode: string
   name: string
+  nick: string
+  photo: string
   phone: string
   gender: Gender
   parentName1: string
@@ -96,7 +101,6 @@ export default function StudentsPage() {
     },
     {
       header: "操作",
-      accessorKey: "id",
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Button
@@ -120,7 +124,8 @@ export default function StudentsPage() {
 
   const renderContent = (s: Student) => {
     // 使用默认渐变色
-    const gradient = "from-blue-400 to-blue-600"
+    const gradient =
+      s.gender === Gender.MALE ? "from-blue-400 to-blue-600" : "from-purple-400 to-purple-600"
 
     return (
       <Card
@@ -137,32 +142,42 @@ export default function StudentsPage() {
           </div>
 
           {/* 图标 */}
-          <div className="absolute top-4 right-4">
-            <div className="bg-white/20 rounded-lg p-3">
-              {/* <User className="size-8 text-white" /> */}
-            </div>
+          <div className="absolute top-6 right-6">
+            <Image
+              className="rounded-lg w-[70px] h-[90px] object-cover overflow-hidden"
+              src={s.photo || (s.gender === Gender.MALE ? boyAvatar : girlAvatar)}
+              alt={s.name}
+            />
           </div>
 
           {/* 学生信息 */}
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-2">{s.name}</h3>
             <p className="text-white/90 text-sm">
-              {genderLabels[s.gender]} · {s.phone}
+              {genderLabels[s.gender]} · 家长：{s.parentName1}
             </p>
-            {s.parentName1 && <p className="text-white/80 text-xs mt-1">家长：{s.parentName1}</p>}
           </div>
         </div>
 
         {/* 底部信息 */}
-        <div className="p-4 bg-card">
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+        <div className="p-4 bg-card text-xs text-muted-foreground">
+          <div className="flex items-center justify-between  mb-3">
             <span className="flex items-center gap-1">
-              {/* <BookOpen className="size-4" /> */}
+              <BookOpen className="size-4" />
               选课 {s.enrolledCourses} 门
+            </span>
+            <span className="flex items-center gap-1">
+              <PhoneCall className="size-4" />
+              {s.phone}
             </span>
           </div>
 
-          <div className="text-xs text-muted-foreground">入学时间：{formatDate(s.joinedAt)}</div>
+          <div className="flex items-center justify-between  mb-3">
+            <span className="flex items-center gap-1">
+              <Calendar1 className="size-4" />
+              {formatDate(s.joinedAt)}
+            </span>
+          </div>
         </div>
       </Card>
     )
@@ -184,15 +199,15 @@ export default function StudentsPage() {
         <div className="flex items-center gap-3">
           <Button onClick={() => (window.location.href = "/students/new")}>添加学生</Button>
           <Sheet>
-            <SheetTrigger>
+            <SheetTrigger asChild>
               <Button>批量导入</Button>
             </SheetTrigger>
             <SheetContent style={{ minWidth: "800px" }}>
               <SheetHeader>
                 <SheetTitle>批量导入</SheetTitle>
-                <SheetDescription>
+                <div className="mt-4">
                   <StudentImport />
-                </SheetDescription>
+                </div>
               </SheetHeader>
             </SheetContent>
           </Sheet>

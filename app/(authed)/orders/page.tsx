@@ -107,7 +107,6 @@ export default function OrdersPage() {
     },
     {
       header: "操作",
-      accessorKey: "id",
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Button

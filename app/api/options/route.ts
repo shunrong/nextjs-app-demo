@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
           },
-          orderBy: { name: "asc" },
+          orderBy: { id: "asc" },
         })
         return NextResponse.json({
           success: true,
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
           },
-          orderBy: { name: "asc" },
+          orderBy: { id: "asc" },
         })
         return NextResponse.json({
           success: true,
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
             year: true,
             term: true,
           },
-          orderBy: [{ year: "desc" }, { term: "asc" }, { title: "asc" }],
+          orderBy: [{ id: "asc" }],
         })
         // 格式化课程名称
         const formattedCourses = courses.map(course => ({

@@ -38,7 +38,6 @@ function formatDate(input: string) {
 
 interface Course {
   id: number
-  displayCode: string
   title: string
   subtitle?: string | null
   category: string
@@ -120,7 +119,6 @@ export default function CoursesPage() {
     },
     {
       header: "操作",
-      accessorKey: "id",
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Button
@@ -170,23 +168,7 @@ export default function CoursesPage() {
           {/* 课程编号 */}
           <div className="absolute top-4 left-4">
             <Badge variant="sale" className="text-white text-xs px-2 py-1 rounded-sm bg-white/20">
-              {c.displayCode}
-            </Badge>
-          </div>
-
-          {/* 状态标签 */}
-          <div className="absolute top-4 right-16">
-            <Badge
-              variant="sale"
-              className={`text-white text-xs px-2 py-1 rounded-sm ${
-                c.status === CourseStatus.OPEN
-                  ? "bg-green-500"
-                  : c.status === CourseStatus.DRAFT
-                    ? "bg-yellow-500"
-                    : "bg-gray-500"
-              }`}
-            >
-              {courseStatusLabels[c.status]}
+              {`CO${String(c.id).padStart(4, "0")}`}
             </Badge>
           </div>
 
@@ -200,7 +182,7 @@ export default function CoursesPage() {
           {/* 标题和描述 */}
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-2 line-clamp-2">{c.title}</h3>
-            <p className="text-white/90 text-sm line-clamp-2">
+            <p className="text-white/90 text-sm line-clamp-2 text-ellipsis overflow-hidden whitespace-nowrap">
               {c.subtitle || `${c.category} 专业课程，由 ${c.teacher} 授课`}
             </p>
             <div className="text-white/80 text-xs mt-1">
@@ -225,6 +207,22 @@ export default function CoursesPage() {
                 {formatCurrency(Math.floor(c.price * 1.2))}
               </span>
             </div>
+
+            {/* 状态标签 */}
+            <span className="flex items-center gap-1">
+              <Badge
+                variant="sale"
+                className={`text-white text-xs px-2 py-1 rounded-sm ${
+                  c.status === CourseStatus.OPEN
+                    ? "bg-green-500"
+                    : c.status === CourseStatus.DRAFT
+                      ? "bg-yellow-500"
+                      : "bg-gray-500"
+                }`}
+              >
+                {courseStatusLabels[c.status]}
+              </Badge>
+            </span>
           </div>
         </div>
       </Card>
@@ -235,7 +233,7 @@ export default function CoursesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Input
-          placeholder="搜索课程/分类/讲师"
+          placeholder="搜索课程/分类/教师"
           value={query}
           onChange={e => {
             setQuery(e.target.value)

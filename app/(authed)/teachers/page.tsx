@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { UserCheck, BookOpen } from "lucide-react"
+import Image from "next/image"
+import { UserCheck, BookOpen, PhoneCall } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +13,8 @@ import { Badge } from "@/components/ui/badge"
 import { PageTurning } from "@/components/page-turning"
 import { useApi } from "@/hooks/use-api"
 import { Gender, genderLabels, Job, jobLabels } from "@/lib/enums"
+import manAvatar from "@/public/man.png"
+import womanAvatar from "@/public/woman.png"
 
 function formatDate(input: string) {
   return new Intl.DateTimeFormat("zh-CN", {
@@ -81,7 +84,6 @@ export default function TeachersPage() {
     },
     {
       header: "操作",
-      accessorKey: "id",
       cell: ({ row }) => (
         <div className="flex gap-2">
           <Button
@@ -106,8 +108,10 @@ export default function TeachersPage() {
   const renderContent = (t: Teacher) => {
     // 根据职位选择渐变色
     const gradients = {
-      [Job.TEACHER]: "from-cyan-400 to-cyan-600",
-      [Job.ASSISTANT]: "from-purple-400 to-purple-600",
+      [Job.TEACHER]:
+        t.gender === Gender.MALE ? "from-blue-400 to-blue-600" : "from-purple-400 to-purple-600",
+      [Job.ASSISTANT]:
+        t.gender === Gender.MALE ? "from-cyan-400 to-cyan-600" : "from-pink-400 to-pink-600",
     }
     const gradient = gradients[t.job]
 
@@ -118,6 +122,13 @@ export default function TeachersPage() {
         onClick={() => (window.location.href = `/teachers/${t.id}`)}
       >
         <div className={`bg-gradient-to-br ${gradient} p-6 text-white relative`}>
+          {/* 教师信息 */}
+          <div className="mt-8">
+            <h3 className="text-xl font-bold mb-2">{t.name}</h3>
+            <p className="text-white/90 text-sm">
+              {genderLabels[t.gender]} · {t.nick}
+            </p>
+          </div>
           {/* 教师编号 */}
           <div className="absolute top-4 left-4">
             <Badge variant="sale" className="text-white text-xs px-2 py-1 rounded-sm bg-white/20">
@@ -126,18 +137,12 @@ export default function TeachersPage() {
           </div>
 
           {/* 图标 */}
-          <div className="absolute top-4 right-4">
-            <div className="bg-white/20 rounded-lg p-3">
-              <UserCheck className="size-8 text-white" />
-            </div>
-          </div>
-
-          {/* 教师信息 */}
-          <div className="mt-8">
-            <h3 className="text-xl font-bold mb-2">{t.name}</h3>
-            <p className="text-white/90 text-sm">
-              {genderLabels[t.gender]} · {t.phone}
-            </p>
+          <div className="absolute top-6 right-6">
+            <Image
+              className="rounded-lg w-[70px] h-[90px] object-cover overflow-hidden"
+              src={t.avatar || (t.gender === Gender.MALE ? manAvatar : womanAvatar)}
+              alt={t.name}
+            />
           </div>
         </div>
 
@@ -149,12 +154,17 @@ export default function TeachersPage() {
               {t.courseCount} 门课程
             </span>
             <span className="flex items-center gap-1">
-              <UserCheck className="size-4" />
-              {t.nick}
+              <PhoneCall className="size-4" />
+              {t.phone}
             </span>
           </div>
 
-          <div className="text-xs text-muted-foreground">加入时间：{formatDate(t.joinedAt)}</div>
+          <div className="text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <UserCheck className="size-4" />
+              {formatDate(t.joinedAt)}
+            </span>
+          </div>
         </div>
       </Card>
     )
@@ -164,7 +174,7 @@ export default function TeachersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <Input
-          placeholder="搜索姓名/邮箱/手机号"
+          placeholder="搜索姓名/手机号"
           value={query}
           onChange={e => {
             setQuery(e.target.value)
