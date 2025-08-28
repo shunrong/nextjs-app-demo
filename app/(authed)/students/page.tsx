@@ -5,7 +5,14 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
 import { DataTable, type DataTableProps } from "@/components/data-table"
 import { DataCards } from "@/components/data-cards"
 import { ViewToggle } from "@/components/view-toggle"
@@ -42,7 +49,6 @@ export default function StudentsPage() {
   const [query, setQuery] = useState("")
   const [current, setCurrent] = useState(1)
   const [tab, setTab] = useState("card")
-  const [activeTab, setActiveTab] = useState("list") // 新增：list 或 import
 
   const PAGE_SIZE = tab === "card" ? 12 : 10
 
@@ -164,54 +170,43 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-4">
-      {/* 页面头部 */}
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">学生管理</h1>
+        <Input
+          placeholder="搜索姓名/手机号"
+          value={query}
+          onChange={e => {
+            setQuery(e.target.value)
+            setCurrent(1)
+          }}
+          className="w-[260px]"
+        />
+
         <div className="flex items-center gap-3">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="list">学生列表</TabsTrigger>
-              <TabsTrigger value="import">批量导入</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <Button onClick={() => (window.location.href = "/students/new")}>添加学生</Button>
+          <Sheet>
+            <SheetTrigger>
+              <Button>批量导入</Button>
+            </SheetTrigger>
+            <SheetContent style={{ minWidth: "800px" }}>
+              <SheetHeader>
+                <SheetTitle>批量导入</SheetTitle>
+                <SheetDescription>
+                  <StudentImport />
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
+          <ViewToggle tab={tab} setTab={setTab} />
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsContent value="list">
-          {/* 原有的学生列表内容 */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <Input
-                placeholder="搜索姓名/手机号"
-                value={query}
-                onChange={e => {
-                  setQuery(e.target.value)
-                  setCurrent(1)
-                }}
-                className="w-[260px]"
-              />
+      {tab === "card" ? (
+        <DataCards data={students} loading={loading} renderContent={renderContent} />
+      ) : (
+        <DataTable data={students} loading={loading} columns={columns} />
+      )}
 
-              <div className="flex items-center gap-3">
-                <Button onClick={() => (window.location.href = "/students/new")}>添加学生</Button>
-                <ViewToggle tab={tab} setTab={setTab} />
-              </div>
-            </div>
-
-            {tab === "card" ? (
-              <DataCards data={students} loading={loading} renderContent={renderContent} />
-            ) : (
-              <DataTable data={students} loading={loading} columns={columns} />
-            )}
-
-            <PageTurning current={current} size={PAGE_SIZE} total={total} onChange={setCurrent} />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="import">
-          <StudentImport />
-        </TabsContent>
-      </Tabs>
+      <PageTurning current={current} size={PAGE_SIZE} total={total} onChange={setCurrent} />
     </div>
   )
 }
