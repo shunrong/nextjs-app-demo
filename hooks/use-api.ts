@@ -21,10 +21,9 @@ interface UseApiOptions {
 
 export function useApi<T>(endpoint: string, options: UseApiOptions = {}) {
   const [data, setData] = useState<T[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<boolean | undefined>(undefined)
+  const [total, setTotal] = useState<number | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
-  const [total, setTotal] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
 
   const { page = 1, limit = 10, search = "", enabled = true } = options
 
@@ -47,7 +46,6 @@ export function useApi<T>(endpoint: string, options: UseApiOptions = {}) {
       if (response.ok && result.success) {
         setData(result.data)
         setTotal(result.total || 0)
-        setTotalPages(result.totalPages || 0)
       } else {
         const message = result.error || "获取数据失败"
         setError(message)
@@ -86,7 +84,6 @@ export function useApi<T>(endpoint: string, options: UseApiOptions = {}) {
     loading,
     error,
     total,
-    totalPages,
     refetch: fetchData,
   }
 }

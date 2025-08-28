@@ -53,7 +53,7 @@ function PaginationPrevious({ className, ...props }: React.ComponentProps<"a">) 
       {...props}
     >
       <ChevronLeft className="h-4 w-4" />
-      <span>上一页</span>
+      {/* <span>上一页</span> */}
     </a>
   )
 }
@@ -68,7 +68,7 @@ function PaginationNext({ className, ...props }: React.ComponentProps<"a">) {
       )}
       {...props}
     >
-      <span>下一页</span>
+      {/* <span>下一页</span> */}
       <ChevronRight className="h-4 w-4" />
     </a>
   )
